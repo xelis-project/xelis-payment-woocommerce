@@ -1,0 +1,20 @@
+{
+  "name": "xelis-payment-block",
+  "version": "0.1.0",
+  "description": "",
+  "private": "true",
+  "scripts": {
+    "build": "esbuild ./index.js --loader:.js=jsx --external:react --bundle --outdir=build",
+    "watch": "npm run build -- --watch"
+  },
+  "author": "g45t345rt",
+  "license": "ISC",
+  "dependencies": {
+    "pretty-ms": "^9.1.0",
+    "qrcode.react": "^4.0.1",
+    "react": "^18.3.1"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0"
+  }
+}

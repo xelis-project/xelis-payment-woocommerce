@@ -8,7 +8,7 @@ The plugin should be easy to integrate for store owner and seamless to use for c
 
 ## Store owner
 
-1. The store owner download the plugin from this repo releases and manually use the 'add plugin in wordpress'.
+1. The store owner download the plugin from this repo releases and manually use the `add plugin in wordpress`.
 2. The store owner activate the plugin and wait for things to load.
 3. The store owner goes to settings and add the address of his wallet.
 4. The store owner enable the payment.

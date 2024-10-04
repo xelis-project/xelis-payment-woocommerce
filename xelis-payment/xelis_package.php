@@ -51,12 +51,12 @@ class Xelis_Package
 
     if ($extension == 'zip') {
       $zip = new ZipArchive();
-      if ($zip->open($xelis_zip_file) === TRUE) {
+      if ($zip->open($xelis_zip_file) == true) {
         if (!$zip->extractTo($xelis_folder)) {
           throw new Exception('failed to extract xelis package');
         }
 
-        // TODO strip first folder
+        // TODO strip first folder like --strip-components=1 in tar
 
         $zip->close();
       } else {
@@ -70,14 +70,5 @@ class Xelis_Package
     } else {
       throw new Exception('unknown extension package');
     }
-
-    $xelis_wallet = __DIR__ . '/xelis_pkg/xelis_wallet';
-    //chmod($xelis_wallet, 0755);
-    $output = [];
-
-    //exec($xelis_wallet . " " . escapeshellarg("--version"), $output);
-    //exec($xelis_wallet . " > /dev/null 2>&1 &");
-    //print_r($output);
-    //throw new Exception("stop");
   }
 }

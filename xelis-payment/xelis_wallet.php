@@ -13,12 +13,24 @@ class Xelis_Wallet
     return $this->fetch("get_address");
   }
 
+  public function get_topoheight() {
+    return $this->fetch("get_topoheight");
+  }
+
   public function get_transaction(string $tx_id)
   {
     return $this->fetch("get_transaction", ["hash" => $tx_id]);
   }
 
-  public function send_funds(int $amount, string $destination)
+  public function get_incoming_transactions(int $start_topo)
+  {
+    return $this->fetch("list_transactions", [
+      "min_topoheight" => $start_topo,
+      "accept_incoming" => true,
+    ]);
+  }
+
+  public function send_transaction(int $amount, string $destination)
   {
     return $this->fetch("build_transaction", [
       "broadcast" => true,
@@ -59,17 +71,20 @@ class Xelis_Wallet
 
     $response = curl_exec($ch);
 
-    if ($response === false) {
+    if ($response == false) {
       throw new Exception(message: curl_error($ch));
       //echo 'cURL Error: ' . curl_error($ch);
-    } else {
-      $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-      $jsonResponse = json_decode($response, true);
-      //throw new Exception(message: $jsonResponse);
-      //print_r($jsonResponse); // Print the response
     }
 
     curl_close($ch);
+
+    //$http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $data = json_decode($response);
+    if (isset($data->result)) {
+      return $data->result;
+    }
+
+    return $data;
   }
 
   public function get_wallet_pid(): int|null
@@ -98,6 +113,14 @@ class Xelis_Wallet
     return file_exists('/proc/' . $pid);
   }
 
+  public function shift_xel(int $amount) {
+    return $amount / 100000000.0;
+  }
+
+  public function unshift_xel(float $amount) {
+    return (int)($amount * 100000000.0);
+  }
+
   public function start_wallet()
   {
     $xelis_wallet = __DIR__ . '/xelis_pkg/xelis_wallet';
@@ -118,20 +141,18 @@ class Xelis_Wallet
     //exec($xelis_wallet . " --version", $output, $status);
 
     $wallet_file_path = __DIR__ . "/wallet";
-    $precomputed_table_file_path = __DIR__ . "/precomputed_table";
+    //$precomputed_table_file_path = __DIR__ . "/precomputed_table.bin";
 
+    // this is local only don't care if we set password in clear and as admin
     $xelis_wallet_cmd = $xelis_wallet
       . " --daemon-address https://node.xelis.io "
       . " --wallet-path " . $wallet_file_path
       . " --password admin "
-      . " --precomputed-tables-path " . $precomputed_table_file_path
+      . " --precomputed-tables-path " . __DIR__ . "/precomputed_tables/ "
       . " --rpc-bind-address 127.0.0.1:8081 "
       . " --rpc-username admin "
-      . " --rpc-password admin ";
-
-    //exec($xelis_wallet_cmd, $output, $status);
-    //print_r($this->fetch());
-    //throw new Exception(message: json_encode($output));
+      . " --rpc-password admin "
+      . " --force-stable-balance";
 
     $descriptorspec = [
       0 => ["pipe", "r"], // stdin
@@ -143,7 +164,7 @@ class Xelis_Wallet
     $process_info = proc_get_status($process);
     $pid = $process_info["pid"];
 
-    if ($this->store_wallet_pid($pid) === false) {
+    if ($this->store_wallet_pid($pid) == false) {
       throw new Exception("can't store xelis wallet process id");
     }
 

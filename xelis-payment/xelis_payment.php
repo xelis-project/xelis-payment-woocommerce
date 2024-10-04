@@ -1,13 +1,16 @@
 <?php
 
+require __DIR__ . '/xelis_payment_state.php';
+require __DIR__ . '/xelis_rest.php';
 require __DIR__ . '/xelis_package.php';
 require __DIR__ . '/xelis_wallet.php';
 require __DIR__ . '/xelis_payment_gateway.php';
 require __DIR__ . '/xelis_payment_method.php';
+require __DIR__ . '/xelis_data.php';
 
 /**
- * Plugin Name: XELIS Payment Gateway
- * Description: A XELIS payment gateway for WooCommerce.
+ * Plugin Name: XELIS Payment
+ * Description: A XELIS payment for WooCommerce.
  * Version: 0.1.0
  * Author: g45t345rt
  */
@@ -17,6 +20,7 @@ if (!defined(constant_name: 'ABSPATH')) {
   exit;
 }
 
+// before anything check if woocommerce plugin is installed
 function missing_woocommerce_notice()
 {
   echo '<div class="error"><p><strong>' . sprintf(esc_html__('XELIS Payment requires WooCommerce to be installed and active. You can download %s here.', 'xelis_payment'), '<a href="https://woo.com/" target="_blank">WooCommerce</a>') . '</strong></p></div>';
@@ -39,6 +43,7 @@ function load_xelis_plugin()
 
 add_action('plugins_loaded', 'load_xelis_plugin');
 
+// install xelis binaries on activation
 function activate_xelis_plugin()
 {
   if (!check_dependencies()) {
@@ -51,10 +56,9 @@ function activate_xelis_plugin()
 
 register_activation_hook(__FILE__, 'activate_xelis_plugin');
 
+// make sure wallet is running - start otherwise
 $xelis_wallet = new Xelis_Wallet();
 $xelis_wallet->start_wallet();
-
-$xelis_wallet->get_address("testing");
 
 // add the gateway to WooCommerce payment method
 function add_xelis_payment_gateway($gateways)
@@ -65,7 +69,7 @@ function add_xelis_payment_gateway($gateways)
 
 add_filter('woocommerce_payment_gateways', 'add_xelis_payment_gateway');
 
-// add woocommerce blocks
+// register woocommerce payment blocks
 add_action(
   'woocommerce_blocks_payment_method_type_registration',
   function ($payment_method_registry) {
@@ -73,24 +77,26 @@ add_action(
   }
 );
 
-
-/*
-function block_assets()
+// start session
+function start_session()
 {
-  wp_enqueue_script(
-    'xelis-payment-block-js',
-    plugins_url('block.js', __FILE__),
-    array('wp-blocks', 'wp-editor', 'wp-components', 'wp-element', 'wp-i18n', 'wc-components'), // dependencies
-    filemtime(plugin_dir_path(__FILE__) . 'block.js'),
-    true
-  );
-
-  wp_enqueue_style(
-    'xelis-payment-block-css',
-    plugins_url('style.css', __FILE__),
-    //array('wp-edit-blocks')
-  );
+  if (!session_id()) {
+    session_start();
+  }
 }
 
-add_action('enqueue_block_assets', 'block_assets');
-*/
+add_action('init', 'start_session', 1);
+
+function destroy_session()
+{
+  if (session_id()) {
+    session_destroy();
+  }
+}
+
+add_action('wp_logout', 'destroy_session');
+
+// register rest routes
+$xelis_rest = new Xelis_Rest();
+
+add_action('rest_api_init', [$xelis_rest, 'register_routes']);

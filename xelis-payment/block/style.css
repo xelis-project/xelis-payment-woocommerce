@@ -1,0 +1,166 @@
+.xelis-payment-label {
+  display: flex;
+  gap: .5rem;
+  flex-direction: row;
+  align-items: center;
+}
+
+.xelis-payment-label svg {
+  width: 1.8rem;
+  height: 1.8rem;
+}
+
+.xelis-payment-content {
+  display: flex;
+  gap: 1rem;
+  flex-direction: column;
+  align-items: start;
+  container-type: inline-size;
+}
+
+.xelis-payment-data {
+  display: flex;
+  gap: .5rem;
+  flex-direction: column;
+  align-items: start;
+}
+
+.xelis-payment-button {
+  background-color: #7afad3;
+  border: none;
+  outline: none;
+  padding: .5rem;
+  cursor: pointer;
+  display: flex;
+  gap: .25rem;
+  flex-direction: row;
+  align-items: center;
+  font-weight: bold;
+}
+
+.xelis-payment-button svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.xelis-payment-button:hover {
+  background-color: black;
+  color: #7afad3;
+}
+
+.xelis-payment-addr {
+  display: flex;
+  flex-direction: column;
+  background-color: black;
+  align-items: center;
+}
+
+@container (min-width: 700px) {
+  .xelis-payment-addr {
+    flex-direction: row;
+  }
+}
+
+.xelis-payment-addr-qrcode {
+  border: .2rem solid black;
+  padding: 1rem;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  max-height: 12rem;
+  background: white;
+}
+
+.xelis-payment-addr-value {
+  word-break: break-word;
+  color: white;
+  padding: .5rem 1rem;
+  line-height: 1.3rem;
+  display: flex;
+  gap: .5rem;
+  flex-direction: row;
+  align-items: center;
+}
+
+.xelis-payment-addr-value button {
+  background: none;
+  color: white;
+  border: none;
+  cursor: pointer;
+  outline: none;
+}
+
+.xelis-payment-addr-value button:hover {
+  color: #7afad3;
+}
+
+.xelis-payment-addr-value button svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.xelis-payment-amount {
+  background: #7afad3;
+  padding: .5rem 1rem;
+  font-weight: bold;
+  font-size: 1.2rem;
+  display: flex;
+  gap: .5rem;
+  flex-direction: row;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.xelis-payment-amount svg {
+  width: 2rem;
+  height: 2rem;
+}
+
+.xelis-payment-waiting {
+  display: flex;
+  gap: .5rem;
+  align-items: center;
+}
+
+.xelis-payment-init-loading {
+  display: flex;
+  gap: .5rem;
+  flex-direction: row;
+  align-items: center;
+}
+
+.xelis-payment-init-loading svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.xelis-payment-loading-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  animation: rotate-loading-icon 1s infinite;
+}
+
+@keyframes rotate-loading-icon {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.xelis-payment-highlight {
+  background-color: #ffd100;
+  padding: .25rem .5em;
+  display: inline-flex;
+  gap: .25rem;
+  flex-direction: row;
+}
+
+.xelis-payment-highlight svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.xelis-payment-devider {
+  height: .25rem;
+  width: 100%;
+  background-color: black;
+}
