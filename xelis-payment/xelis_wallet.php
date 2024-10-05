@@ -13,7 +13,8 @@ class Xelis_Wallet
     return $this->fetch("get_address");
   }
 
-  public function get_topoheight() {
+  public function get_topoheight()
+  {
     return $this->fetch("get_topoheight");
   }
 
@@ -42,9 +43,22 @@ class Xelis_Wallet
     ]);
   }
 
+  public function is_online()
+  {
+    return $this->fetch("is_online");
+  }
+
+  public function set_online_mode(string $endpoint)
+  {
+    return $this->fetch("set_online_mode", [
+      "daemon_address" => $endpoint,
+      "auto_reconnect" => true,
+    ]);
+  }
+
   public function fetch(string $method, array $params = null)
   {
-    $url = 'http://localhost:8081/json_rpc';
+    $endpoint = 'http://localhost:8081/json_rpc';
 
     $request = [
       'id' => 1,
@@ -57,7 +71,7 @@ class Xelis_Wallet
     }
 
     $jsonRequest = json_encode($request);
-    $ch = curl_init($url);
+    $ch = curl_init($endpoint);
     $basic_token = "admin:admin";
 
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -68,10 +82,11 @@ class Xelis_Wallet
     ]);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonRequest);
+    curl_setopt($ch, CURLOPT_FAILONERROR, true); // error out if 404 or other
 
     $response = curl_exec($ch);
 
-    if ($response == false) {
+    if (curl_errno($ch)) {
       throw new Exception(message: curl_error($ch));
       //echo 'cURL Error: ' . curl_error($ch);
     }
@@ -107,18 +122,36 @@ class Xelis_Wallet
     return file_put_contents(__DIR__ . '/wallet_pid.txt', $pid);
   }
 
-  public function is_process_runing($pid): bool
+  public function shift_xel(int $amount)
   {
-    // TODO windows
-    return file_exists('/proc/' . $pid);
-  }
-
-  public function shift_xel(int $amount) {
     return $amount / 100000000.0;
   }
 
-  public function unshift_xel(float $amount) {
-    return (int)($amount * 100000000.0);
+  public function unshift_xel(float $amount)
+  {
+    return (int) ($amount * 100000000.0);
+  }
+
+  public function is_running(): bool
+  {
+    $pid = $this->get_wallet_pid();
+    if ($pid) {
+      // TODO: window
+      return file_exists('/proc/' . $pid);
+    }
+
+    return false;
+  }
+
+  public function close_wallet(): bool
+  {
+    $pid = $this->get_wallet_pid();
+    if ($pid) {
+      // TODO: window
+      return posix_kill($pid, SIGTERM);
+    }
+
+    return false;
   }
 
   public function start_wallet()
@@ -128,27 +161,15 @@ class Xelis_Wallet
       throw new Exception('xelis_wallet does not exists');
     }
 
-    $pid = $this->get_wallet_pid();
-    if ($pid) {
-      if ($this->is_process_runing($pid)) {
-        //throw new Exception("process is already running");
-        return;
-      }
-    }
-
     $output = [];
-    $status = "";
-    //exec($xelis_wallet . " --version", $output, $status);
+    $gateway = new Xelis_Payment_Gateway();
 
-    $wallet_file_path = __DIR__ . "/wallet";
-    //$precomputed_table_file_path = __DIR__ . "/precomputed_table.bin";
-
-    // this is local only don't care if we set password in clear and as admin
+    // this is local only we don't care if we set password in clear and as admin
     $xelis_wallet_cmd = $xelis_wallet
-      . " --daemon-address https://node.xelis.io "
-      . " --wallet-path " . $wallet_file_path
+      . " --daemon-address " . $gateway->node_endpoint
+      . " --wallet-path /wallet"
       . " --password admin "
-      . " --precomputed-tables-path " . __DIR__ . "/precomputed_tables/ "
+      . " --precomputed-tables-path " . __DIR__ . "/precomputed_tables/"
       . " --rpc-bind-address 127.0.0.1:8081 "
       . " --rpc-username admin "
       . " --rpc-password admin "
@@ -164,7 +185,7 @@ class Xelis_Wallet
     $process_info = proc_get_status($process);
     $pid = $process_info["pid"];
 
-    if ($this->store_wallet_pid($pid) == false) {
+    if ($this->store_wallet_pid($pid) === false) {
       throw new Exception("can't store xelis wallet process id");
     }
 

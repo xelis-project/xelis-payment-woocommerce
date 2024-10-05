@@ -8,7 +8,8 @@ class Xelis_Payment_Method extends AbstractPaymentMethodType
 
   public function initialize()
   {
-    $this->settings = get_option('woocommerce_xelis_payment_settings', []);
+    $gateway = new Xelis_Payment_Gateway();
+    $this->settings = $gateway->get_settings();
   }
 
   public function is_active()

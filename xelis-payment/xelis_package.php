@@ -15,17 +15,17 @@ class Xelis_Package
 
     $prefix = 'https://github.com/xelis-project/xelis-blockchain/releases/download/' . $this->version . "/";
 
-    if ($os == 'WINNT') {
+    if ($os === 'WINNT') {
       if ($cpu == "x86_64" || $cpu == "AMD64" || $cpu == "x86")
         return $prefix . "x86_64-pc-windows-gnu.zip";
     }
 
-    if ($os == "Linux") {
-      if ($cpu == "x86_64") {
+    if ($os === "Linux") {
+      if ($cpu === "x86_64") {
         return $prefix . "x86_64-unknown-linux-gnu.tar.gz";
       }
 
-      if ($cpu == "aarch64") {
+      if ($cpu === "aarch64") {
         return $prefix . "aarch64-unknown-linux-gnu.tar.gz";
       }
     }
@@ -49,7 +49,7 @@ class Xelis_Package
 
     $extension = pathinfo($xelis_zip_url, PATHINFO_EXTENSION);
 
-    if ($extension == 'zip') {
+    if ($extension === 'zip') {
       $zip = new ZipArchive();
       if ($zip->open($xelis_zip_file) == true) {
         if (!$zip->extractTo($xelis_folder)) {
@@ -62,7 +62,7 @@ class Xelis_Package
       } else {
         throw new Exception('unable to open xelis package');
       }
-    } else if ($extension == 'gz') {
+    } else if ($extension === 'gz') {
       // --strip-components=1 is used to remove subfolder inside the zip
       $command = "tar -xzvf " . escapeshellarg($xelis_zip_file) . " --strip-components=1 -C " . escapeshellarg($xelis_folder);
       //throw new Exception($command);

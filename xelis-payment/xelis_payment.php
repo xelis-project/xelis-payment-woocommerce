@@ -3,6 +3,7 @@
 require __DIR__ . '/xelis_payment_state.php';
 require __DIR__ . '/xelis_rest.php';
 require __DIR__ . '/xelis_package.php';
+require __DIR__ . '/xelis_node.php';
 require __DIR__ . '/xelis_wallet.php';
 require __DIR__ . '/xelis_payment_gateway.php';
 require __DIR__ . '/xelis_payment_method.php';
@@ -57,8 +58,12 @@ function activate_xelis_plugin()
 register_activation_hook(__FILE__, 'activate_xelis_plugin');
 
 // make sure wallet is running - start otherwise
-$xelis_wallet = new Xelis_Wallet();
-$xelis_wallet->start_wallet();
+function run_wallet() {
+  $xelis_wallet = new Xelis_Wallet();
+  if (!$xelis_wallet->is_running()) {
+    $xelis_wallet->start_wallet();
+  }
+}
 
 // add the gateway to WooCommerce payment method
 function add_xelis_payment_gateway($gateways)

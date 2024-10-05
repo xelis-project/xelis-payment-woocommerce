@@ -23,7 +23,7 @@ const Content = (props) => {
     if (settings['payment_state']) return settings['payment_state'];
   });
 
-  const { expiration, addr, xel, status, tx, tx_refund, incorrect_amount } = payment_state;
+  let { expiration, addr, xel, status, tx, tx_refund, incorrect_amount } = payment_state;
 
   const init_payment_state = useCallback(async (options) => {
     set_init_loading(true);
@@ -50,16 +50,26 @@ const Content = (props) => {
     }
   }, []);
 
+  const check_transaction = useCallback(() => {
+
+  }, []);
+
   const copy = useCallback(() => {
     navigator.clipboard.writeText(addr);
-  },[addr])
+  }, [addr]);
 
   useEffect(() => {
     set_duration((expiration * 1000) - Date.now());
 
     const interval_id = setInterval(() => {
       set_duration((duration) => {
-        return Math.max(0, duration - 1000);
+        const new_duration = Math.max(0, duration - 1000);
+        if (new_duration === 0) {
+          clearInterval(interval_id);
+          set_payment_state((s) => ({ ...s, status: `expired` }));
+        }
+
+        return new_duration;
       });
     }, 1000);
 
@@ -85,10 +95,14 @@ const Content = (props) => {
   }, [status])
 
   let render = null;
-  if (!payment_state || init_loading) {
+  if (init_loading) {
     render = [<div className="xelis-payment-init-loading">
       <Icons.Loading className="xelis-payment-loading-icon" />
       Fetching XEL/USD quote.
+    </div>]
+  } else if (!payment_state) {
+    render = [<div>
+      Cannot initialize XELIS payment gateway. Contact store support for assistance.
     </div>]
   } else {
     render = [
@@ -147,7 +161,7 @@ const Content = (props) => {
             Did you sent a transaction before the window expired?
             Do not reset the checkout and try to click the button below to check for the transaction and issue a refund.
           </div>,
-          <button type="button" className="xelis-payment-button">
+          <button type="button" onClick={check_transaction} className="xelis-payment-button">
             <Icons.Transaction />
             Check transaction
           </button>
