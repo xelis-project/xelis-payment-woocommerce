@@ -39,7 +39,7 @@ class Xelis_Payment_State_Object
 
 class Xelis_Payment_State
 {
-  public function init_payment_state(int $timeout): Xelis_Payment_State_Object | null
+  public function init_payment_state(int $timeout): Xelis_Payment_State_Object|null
   {
     $total = WC()->cart->total;
     $cart_hash = WC()->cart->get_cart_hash();
@@ -50,12 +50,17 @@ class Xelis_Payment_State
       $addr = $xelis_wallet->get_address($cart_hash);
       $topoheight = $xelis_wallet->get_topoheight();
     } catch (Exception $e) {
-      error_log('Error in init_payment_state: ' . $e);
-      return null;
+      error_log(message: 'Error in init_payment_state: ' . $e);
+      throw new Exception("Can't initiate XELIS payment gateway");
     }
 
     $xelis_data = new Xelis_Data();
-    $xel = $xelis_data->convert_usd_to_xel($total);
+    try {
+      $xel = $xelis_data->convert_usd_to_xel($total);
+    } catch (Exception $e) {
+      error_log('Error in init_payment_state: ' . $e);
+      throw new Exception("Can't initiate XELIS payment gateway");
+    }
 
     $expiration = time() + $timeout;
 
@@ -69,7 +74,7 @@ class Xelis_Payment_State
     WC()->session->set("payment_state", $state);
   }
 
-  public function get_payment_state(): Xelis_Payment_State_Object | null
+  public function get_payment_state(): Xelis_Payment_State_Object|null
   {
     return WC()->session->get("payment_state");
   }
@@ -77,8 +82,9 @@ class Xelis_Payment_State
   public function process_payment_state()
   {
     $state = $this->get_payment_state();
-    if (!$state)
+    if (!$state) {
       return;
+    }
 
     if (
       $state->status === Xelis_Payment_Status::WAITING ||
@@ -86,6 +92,7 @@ class Xelis_Payment_State
     ) {
       if ($state->expiration < time()) {
         $state->status = Xelis_Payment_Status::EXPIRED;
+        $this->set_payment_state($state);
       }
 
       $gateway = new Xelis_Payment_Gateway();

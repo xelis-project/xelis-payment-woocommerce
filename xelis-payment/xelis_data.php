@@ -11,11 +11,11 @@ class Xelis_Data
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
       'Content-Type: application/json',
     ]);
+    curl_setopt($ch, CURLOPT_FAILONERROR, true);
 
     $response = curl_exec($ch);
-
-    if ($response == false) {
-      throw new Exception(message: curl_error($ch));
+    if (curl_errno($ch)) {
+      throw new Exception(message: curl_error(handle: $ch));
     }
 
     curl_close($ch);

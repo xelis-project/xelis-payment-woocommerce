@@ -54,14 +54,18 @@ class Xelis_Rest
       // check if the cart doesn't contains product with tags that are whitelist
       // whitlist can be set in the payment settings page - if empty it's accept all product
       if (!$gateway->can_make_payment()) {
-        return new WP_REST_Response("Can't use gateway. Some items cannot be bought with XELIS.", 400);
+        return new WP_REST_Response("You can't use the gateway because there are items in the cart that cannot be purchased with XELIS. Remove them or contact the store owner for support.", 400);
       }
 
-      $xelis_state->init_payment_state($timeout);
-    } else {
-      // this checks for xelis txs and redirect funds either to store owner or refund if an error occurs
-      $xelis_state->process_payment_state();
+      try {
+        $xelis_state->init_payment_state($timeout);
+      } catch (Exception $e) {
+        return new WP_REST_Response($e->getMessage(), 400);
+      }
     }
+
+    // this checks for xelis txs and redirect funds either to store owner or refund if an error occurs
+    $xelis_state->process_payment_state();
 
     $state = $xelis_state->get_payment_state();
     return new WP_REST_Response($state, 200);

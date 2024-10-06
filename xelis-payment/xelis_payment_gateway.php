@@ -95,7 +95,7 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
         $xelis_wallet = new Xelis_Wallet();
         $xelis_wallet->set_online_mode($node_endpoint);
       } catch (Exception $e) {
-        $this->add_error($e);
+        $this->add_error($e->getMessage());
         $this->add_error("Not a valid XELIS node.");
         $this->display_errors();
         return false;
@@ -114,7 +114,7 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
           return false;
         }
       } catch (Exception $e) {
-        $this->add_error($e);
+        $this->add_error($e->getMessage());
         $this->display_errors();
         return false;
       }
@@ -175,13 +175,16 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
     $state = $xelis_state->get_payment_state();
 
     if ($state->status !== Xelis_Payment_Status::VALID) {
-      //wc_add_notice( __( 'Your payment could not be processed. Please try again.', 'your-text-domain' ), 'error' );
-      // TODO
-
+      /* wc_add_notice('Your payment could not be processed. Please try again.', 'error');
+      WC()->session->set('wc_notices', [array("notice" => "Your payment could not be processed. Please try again when the transaction has been confirmed by the network.")]);
+      $notices = WC()->session->get('wc_notices', array());
       return array(
         'result' => 'failure',
         'redirect' => '',
-      );
+      );*/
+
+      // I'm using throw since wc_add_notice does not seem to work
+      throw new Exception("Your payment could not be processed. Please try again when the transaction has been confirmed by the network.");
     }
 
     $order = wc_get_order($order_id);

@@ -17,19 +17,23 @@ async function fetch_payment_state({ reload } = { reload: false, update: false }
 
 const Content = (props) => {
   const [init_loading, set_init_loading] = useState(false);
+  const [init_error, set_init_error] = useState();
 
   const [duration, set_duration] = useState(0);
   const [payment_state, set_payment_state] = useState(() => {
-    if (settings['payment_state']) return settings['payment_state'];
+    //if (settings['payment_state']) return settings['payment_state'];
   });
 
   const init_payment_state = useCallback(async (options) => {
     set_init_loading(true);
     const res = await fetch_payment_state(options);
     set_init_loading(false);
+
     if (res.ok) {
       const data = await res.json();
       set_payment_state(data);
+    } else {
+      set_init_error(await res.json());
     }
   }, []);
 
@@ -97,19 +101,22 @@ const Content = (props) => {
   }, [payment_state]);
 
   let render = null;
-  if (init_loading) {
+
+  /*render = [<div>
+    Cannot initialize XELIS payment gateway. Contact store support for assistance.
+  </div>]*/
+
+  if (init_error) {
+    render = [<div>{init_error}</div>]
+  } else if (!payment_state || init_loading) {
     render = [<div className="xelis-payment-init-loading">
       <Icons.Loading className="xelis-payment-loading-icon" />
       Fetching XEL/USD quote.
     </div>]
-  } else if (!payment_state) {
-    render = [<div>
-      Cannot initialize XELIS payment gateway. Contact store support for assistance.
-    </div>]
-  } else {
+  } else if (payment_state) {
     render = [
       <div className="xelis-payment-data">
-        <div>Send XEL to this address with the <b>exact amount</b>.</div>
+        <div>Please send the exact amount of XEL to this address.</div>
         <div className="xelis-payment-addr">
           <QRCodeSVG value={payment_state.addr} className="xelis-payment-addr-qrcode" />
           <div className="xelis-payment-addr-value">
@@ -242,6 +249,8 @@ registerPaymentMethod({
   content: createElement(Content),
   edit: createElement(Content),
   canMakePayment: () => {
+    // always return true and use the payment state error message if you can't use it
+    // this function hides the gateway from the payment options (I prefer display error msg instead)
     return true;
   }
 });
