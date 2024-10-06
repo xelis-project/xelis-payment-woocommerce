@@ -11,7 +11,8 @@ enum Xelis_Payment_Status: string
 
 class Xelis_Payment_State_Object
 {
-  public string $hash;
+  public string $payment_hash;
+  public string $cart_hash;
   public int $timestamp;
   public int $topoheight;
   public int $expiration;
@@ -22,9 +23,10 @@ class Xelis_Payment_State_Object
   public string $refund_tx;
   public float $incorrect_xel;
 
-  public function __construct($hash, $topoheight, $expiration, $addr, $xel)
+  public function __construct($payment_hash, $cart_hash, $topoheight, $expiration, $addr, $xel)
   {
-    $this->hash = $hash;
+    $this->payment_hash = $payment_hash;
+    $this->cart_hash = $cart_hash;
     $this->timestamp = time();
     $this->topoheight = $topoheight;
     $this->expiration = $expiration;
@@ -43,11 +45,13 @@ class Xelis_Payment_State
   {
     $total = WC()->cart->total;
     $cart_hash = WC()->cart->get_cart_hash();
+    $customer_id = WC()->session->get_customer_id();
+    $payment_hash = $customer_id . ":" . $cart_hash;
 
     $xelis_wallet = new Xelis_Wallet();
 
     try {
-      $addr = $xelis_wallet->get_address($cart_hash);
+      $addr = $xelis_wallet->get_address($payment_hash);
       $topoheight = $xelis_wallet->get_topoheight();
     } catch (Exception $e) {
       error_log(message: 'Error in init_payment_state: ' . $e);
@@ -64,7 +68,7 @@ class Xelis_Payment_State
 
     $expiration = time() + $timeout;
 
-    $state = new Xelis_Payment_State_Object($cart_hash, $topoheight, $expiration, $addr, $xel);
+    $state = new Xelis_Payment_State_Object($payment_hash, $cart_hash, $topoheight, $expiration, $addr, $xel);
     $this->set_payment_state($state);
     return $state;
   }
@@ -113,7 +117,7 @@ class Xelis_Payment_State
         for ($a = 0; $a < count($transfers); $a++) {
           $transfer = $transfers[$a];
 
-          if ($transfer->extra_data === $state->hash) {
+          if ($transfer->extra_data === $state->payment_hash) {
             $atomic_amount = $xelis_wallet->unshift_xel($state->xel);
             if ($transfer->amount === $atomic_amount) {
               switch ($transfer->status) {

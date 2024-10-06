@@ -188,6 +188,7 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
     }
 
     $order = wc_get_order($order_id);
+    $order->add_meta_data("xelis_tx", $state->tx);
     $order->payment_complete();
     $order->add_order_note('Payment received via XELIS Payment Gateway.');
 
