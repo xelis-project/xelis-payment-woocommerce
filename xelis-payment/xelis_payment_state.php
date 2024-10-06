@@ -39,8 +39,6 @@ class Xelis_Payment_State_Object
 
 class Xelis_Payment_State
 {
-  public $session_state_key = "xelis_payment_state";
-
   public function init_payment_state(int $timeout): Xelis_Payment_State_Object | null
   {
     $total = WC()->cart->total;
@@ -68,12 +66,12 @@ class Xelis_Payment_State
 
   public function set_payment_state(Xelis_Payment_State_Object $state): void
   {
-    $_SESSION[$this->session_state_key] = $state;
+    WC()->session->set("payment_state", $state);
   }
 
-  public function get_payment_state(): Xelis_Payment_State_Object
+  public function get_payment_state(): Xelis_Payment_State_Object | null
   {
-    return $_SESSION[$this->session_state_key];
+    return WC()->session->get("payment_state");
   }
 
   public function process_payment_state()

@@ -82,25 +82,6 @@ add_action(
   }
 );
 
-// start session
-function start_session()
-{
-  if (!session_id()) {
-    session_start();
-  }
-}
-
-add_action('init', 'start_session', 1);
-
-function destroy_session()
-{
-  if (session_id()) {
-    session_destroy();
-  }
-}
-
-add_action('wp_logout', 'destroy_session');
-
 // register rest routes
 $xelis_rest = new Xelis_Rest();
 

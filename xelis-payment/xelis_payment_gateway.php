@@ -8,6 +8,8 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
 
   public string $node_endpoint;
 
+  public string $whitelist_tags;
+
   public function __construct()
   {
     $this->id = 'xelis_payment';
@@ -25,12 +27,14 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
     $this->wallet_addr = $this->get_option('wallet_addr');
     $this->payment_timeout = $this->get_option('payment_timeout');
     $this->node_endpoint = $this->get_option('node_endpoint');
+    $this->whitelist_tags = $this->get_option('whitelist_tags');
 
     add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
   }
 
-  public function get_settings() {
-    return get_option('woocommerce_' . $this->id .'_settings', []);
+  public function get_settings()
+  {
+    return get_option('woocommerce_' . $this->id . '_settings', []);
   }
 
   public function init_form_fields()
@@ -60,6 +64,12 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
         'description' => __('Set the payment window timeout. Lock the XEL/USD quote price. Default is 30min', 'woocommerce'),
         'default' => '30',
       ),
+      'whitelist_tags' => array(
+        'title' => __('Whitelist tags', 'woocommerce'),
+        'type' => 'text',
+        'description' => __('Set product tags to accepts XELIS payment. Seperated with commas, for example: accept xelis, xelis, crypto. Empty means all product can be bought with XELIS.', 'woocommerce'),
+        'default' => '',
+      ),
     );
   }
 
@@ -67,7 +77,7 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
   {
     // looks like you can't remove the success message even if return false :(
     // https://github.com/woocommerce/woocommerce/blob/37903778fba449da0422207e1ce4f150f02aa0a2/plugins/woocommerce/includes/admin/class-wc-admin-settings.php#L88
-    
+
     // also errors are printed twice :S ???
 
     $node_endpoint = $_POST['woocommerce_' . $this->id . '_node_endpoint'];
@@ -77,7 +87,7 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
         $this->display_errors();
         return false;
       }
-  
+
       try {
         $node = new Xelis_Node($node_endpoint);
         $node->get_version(); // check if you can fetch the endpoint and its valid
@@ -117,15 +127,45 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
         $this->display_errors();
         return false;
       }
-  
+
       if (($payment_timeout) < 5) {  // cannot set less than 5min
         $this->add_error("Can't set less than 5min for payment window.");
         $this->display_errors();
         return false;
-      };
+      }
+      ;
     }
 
+    // don't have to validate whitelist_tags
+    // it's a string seperated by comma
+
     return parent::process_admin_options();
+  }
+
+  public function can_make_payment(): bool
+  {
+    if ($this->whitelist_tags) {
+      $whitelist_tags = array_map('trim', explode(',', $this->whitelist_tags));
+
+      foreach (WC()->cart->get_cart() as $cart_item_key => $cart_item) {
+        $product_id = $cart_item['product_id'];
+        $product_tags = get_the_terms($product_id, 'product_tag');
+        $match = false;
+        foreach ($whitelist_tags as $tag) {
+          foreach ($product_tags as $product_tag) {
+            if ($tag === $product_tag->name) {
+              $match = true;
+              break 2;
+            }
+          }
+        }
+
+        if (!$match)
+          return false;
+      }
+    }
+
+    return true;
   }
 
   public function process_payment($order_id)

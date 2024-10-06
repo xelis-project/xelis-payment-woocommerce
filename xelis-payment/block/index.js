@@ -23,8 +23,6 @@ const Content = (props) => {
     if (settings['payment_state']) return settings['payment_state'];
   });
 
-  let { expiration, addr, xel, status, tx, tx_refund, incorrect_amount } = payment_state;
-
   const init_payment_state = useCallback(async (options) => {
     set_init_loading(true);
     const res = await fetch_payment_state(options);
@@ -55,11 +53,12 @@ const Content = (props) => {
   }, []);
 
   const copy = useCallback(() => {
-    navigator.clipboard.writeText(addr);
-  }, [addr]);
+    navigator.clipboard.writeText(payment_state.addr);
+  }, [payment_state]);
 
   useEffect(() => {
-    set_duration((expiration * 1000) - Date.now());
+    if (!payment_state) return;
+    set_duration((payment_state.expiration * 1000) - Date.now());
 
     const interval_id = setInterval(() => {
       set_duration((duration) => {
@@ -76,15 +75,18 @@ const Content = (props) => {
     return () => {
       clearInterval(interval_id);
     }
-  }, [expiration]);
+  }, [payment_state]);
 
   useEffect(() => {
     if (!payment_state) init_payment_state();
+    else update_payment_state();
   }, []);
 
   useEffect(() => {
+    if (!payment_state) return;
+
     const interval_id = setInterval(() => {
-      if (status === "waiting") {
+      if (payment_state.status === "waiting") {
         update_payment_state();
       }
     }, 15000);
@@ -92,7 +94,7 @@ const Content = (props) => {
     return () => {
       clearInterval(interval_id);
     }
-  }, [status])
+  }, [payment_state]);
 
   let render = null;
   if (init_loading) {
@@ -109,9 +111,9 @@ const Content = (props) => {
       <div className="xelis-payment-data">
         <div>Send XEL to this address with the <b>exact amount</b>.</div>
         <div className="xelis-payment-addr">
-          <QRCodeSVG value={addr} className="xelis-payment-addr-qrcode" />
+          <QRCodeSVG value={payment_state.addr} className="xelis-payment-addr-qrcode" />
           <div className="xelis-payment-addr-value">
-            <div>{addr}</div>
+            <div>{payment_state.addr}</div>
             <button type="button" onClick={copy} title="Copy integrated address">
               <Icons.Copy />
             </button>
@@ -119,12 +121,12 @@ const Content = (props) => {
         </div>
         <div className="xelis-payment-amount">
           <Icons.Xelis fillColor1="transparent" fillColor2="black" />
-          {xel} XEL
+          {payment_state.xel} XEL
         </div>
       </div>
     ];
 
-    switch (status) {
+    switch (payment_state.status) {
       case `waiting`:
         render = [
           ...render,
@@ -173,14 +175,14 @@ const Content = (props) => {
             <div>We found a valid transaction that was confirm after the expiration payment window. A refund has been issued.</div>
             <div>
               Your tx:
-              <a href={`https://explorer.xelis.io/txs/${tx}`} target="_blank">
-                {tx}
+              <a href={`https://explorer.xelis.io/txs/${payment_state.tx}`} target="_blank">
+                {payment_state.tx}
               </a>
             </div>
             <div>
               Refund tx:
-              <a href={`https://explorer.xelis.io/txs/${tx_refund}`} target="_blank">
-                {tx_refund}
+              <a href={`https://explorer.xelis.io/txs/${payment_state.tx_refund}`} target="_blank">
+                {payment_state.tx_refund}
               </a>
             </div>
           </div>
@@ -189,17 +191,17 @@ const Content = (props) => {
       case `wrong_amount_refund`:
         render = [
           <div>
-            <div>We found a valid transaction with the incorrect amount of {incorrect_amount} XEL. A refund has been issued.</div>
+            <div>We found a valid transaction with the incorrect amount of {payment_state.incorrect_amount} XEL. A refund has been issued.</div>
             <div>
               Your tx:
-              <a href={`https://explorer.xelis.io/txs/${tx}`} target="_blank">
-                {tx}
+              <a href={`https://explorer.xelis.io/txs/${payment_state.tx}`} target="_blank">
+                {payment_state.tx}
               </a>
             </div>
             <div>
               Refund tx:
-              <a href={`https://explorer.xelis.io/txs/${tx}`} target="_blank">
-                {tx}
+              <a href={`https://explorer.xelis.io/txs/${payment_state.tx}`} target="_blank">
+                {payment_state.tx}
               </a>
             </div>
           </div>
@@ -210,14 +212,16 @@ const Content = (props) => {
           <div>We have succesfully comfirmed your XELIS transaction. It is valid and you can now finish placing your order.</div>,
           <div>
             Your tx:
-            <a href={`https://explorer.xelis.io/txs/${tx}`} target="_blank">
-              {tx}
+            <a href={`https://explorer.xelis.io/txs/${payment_state.tx}`} target="_blank">
+              {payment_state.tx}
             </a>
           </div>
         ];
         break;
     }
   }
+
+  test = <div>You have items in the cart that you cannot pay with XELIS.</div>
 
   return <div className="xelis-payment-content">
     {render}
