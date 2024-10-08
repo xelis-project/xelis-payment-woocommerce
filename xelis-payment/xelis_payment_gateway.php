@@ -2,6 +2,8 @@
 
 class Xelis_Payment_Gateway extends WC_Payment_Gateway
 {
+  public string $network;
+
   public string $wallet_addr;
 
   public string $payment_timeout; // in min
@@ -15,19 +17,22 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
     $this->id = 'xelis_payment';
     $this->icon = plugins_url('assets/icon.png');
     $this->has_fields = false;
-    $this->method_title = __('XELIS Payment', 'woocommerce');
-    $this->method_description = __('A XELIS payment gateway for WooCommerce.', 'woocommerce');
+    $this->method_title = __('XELIS Payment', 'xelis_payment');
+    $this->method_description = __('A XELIS payment gateway for WooCommerce.', 'xelis_payment');
     $this->supports = array('products');
 
-    $this->init_form_fields();
+
     $this->init_settings();
 
-    $this->title = $this->get_option('title');
-    $this->enabled = $this->get_option('enabled');
-    $this->wallet_addr = $this->get_option('wallet_addr');
-    $this->payment_timeout = $this->get_option('payment_timeout');
-    $this->node_endpoint = $this->get_option('node_endpoint');
-    $this->whitelist_tags = $this->get_option('whitelist_tags');
+    $this->title = __('XELIS Payment', 'xelis_payment');
+    $this->enabled = $this->get_option('enabled', 'no');
+    $this->network = $this->get_option('network', 'mainnet');
+    $this->wallet_addr = $this->get_option('wallet_addr', '');
+    $this->payment_timeout = $this->get_option('payment_timeout', '30');
+    $this->node_endpoint = $this->get_option('node_endpoint', 'https://node.xelis.io');
+    $this->whitelist_tags = $this->get_option('whitelist_tags', '');
+
+    $this->init_form_fields();
 
     add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
   }
@@ -39,35 +44,51 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
 
   public function init_form_fields()
   {
+    $enabled = $this->enabled === "yes" ? true : false;
+    // disabling the plugin does not close the wallet in case there are pending payments
+    // if you want to change the network you must wait until all payments have confirmed or expired
+
     $this->form_fields = array(
       'enabled' => array(
-        'title' => __('Enable/Disable', 'woocommerce'),
+        'title' => __('Enable/Disable', 'xelis_payment'),
         'type' => 'checkbox',
-        'label' => __('Enable XELIS Payment', 'woocommerce'),
+        'label' => __('Enable XELIS Payment', 'xelis_payment'),
         'default' => 'no',
       ),
+      'network' => array(
+        'title' => __('Network', 'xelis_payment'),
+        'type' => 'select',
+        'options' => array(
+          'mainnet' => __('Mainnet', 'xelis_payment'),
+          'testnet' => __('Testnet', 'xelis_payment'),
+          'dev' => __('Dev', 'xelis_payment'),
+        ),
+        'description' => $enabled ? __('Disable the plugin if you want to change the network.', 'xelis_payment') : __('Change XELIS wallet network. You will need to set the node endpoint and wallet address again!', 'xelis_payment'),
+        'default' => 'mainnet',
+        'disabled' => $enabled
+      ),
       'node_endpoint' => array(
-        'title' => __('XELIS Node endpoint', 'woocommerce'),
+        'title' => __('Node endpoint', 'xelis_payment'),
         'type' => 'text',
-        'description' => __('Set the node endpoint url. Default is https://node.xelis.io', 'woocommerce'),
+        'description' => __('Set the node endpoint url. Default is https://node.xelis.io.', 'xelis_payment'),
         'default' => 'https://node.xelis.io',
       ),
       'wallet_addr' => array(
-        'title' => __('XELIS Wallet', 'woocommerce'),
+        'title' => __('Wallet address', 'xelis_payment'),
         'type' => 'text',
-        'description' => __('Set the address of your XELIS wallet to receive funds', 'woocommerce'),
+        'description' => __('Set the address of your XELIS wallet to receive funds.', 'xelis_payment'),
         'default' => '',
       ),
       'payment_timeout' => array(
-        'title' => __('Payment window timeout', 'woocommerce'),
+        'title' => __('Payment window timeout', 'xelis_payment'),
         'type' => 'text',
-        'description' => __('Set the payment window timeout. Lock the XEL/USD quote price. Default is 30min', 'woocommerce'),
+        'description' => __('Set the payment window timeout. Lock the XEL/USD quote price. Default is 30 min.', 'xelis_payment'),
         'default' => '30',
       ),
       'whitelist_tags' => array(
-        'title' => __('Whitelist tags', 'woocommerce'),
+        'title' => __('Whitelist tags', 'xelis_payment'),
         'type' => 'text',
-        'description' => __('Set product tags to accepts XELIS payment. Seperated with commas, for example: accept xelis, xelis, crypto. Empty means all product can be bought with XELIS.', 'woocommerce'),
+        'description' => __('Set product tags to accepts XELIS payment. Seperated with commas, for example: accept xelis, xelis, crypto. Leaving blank means that all products can be bought with XEL.', 'xelis_payment'),
         'default' => '',
       ),
     );
@@ -79,6 +100,45 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
     // https://github.com/woocommerce/woocommerce/blob/37903778fba449da0422207e1ce4f150f02aa0a2/plugins/woocommerce/includes/admin/class-wc-admin-settings.php#L88
 
     // also errors are printed twice :S ???
+
+    $network = $_POST['woocommerce_' . $this->id . '_network'];
+    if ($network && $network !== $this->network) {
+      $xelis_wallet = new Xelis_Wallet();
+
+      $new_node_endpoint = '';
+      switch ($network) {
+        case "mainnet":
+          $new_node_endpoint = "https://node.xelis.io";
+          break;
+        case "testnet":
+          $new_node_endpoint = "https://testnet-node.xelis.io";
+          break;
+        case "dev":
+          $new_node_endpoint = "http://127.0.0.1:8080";
+          break;
+        default:
+          $this->add_error('Network is not a valid option');
+          $this->display_errors();
+          return false;
+      }
+
+      $_POST['woocommerce_' . $this->id . '_wallet_addr'] = '';
+      $this->wallet_addr = '';
+
+      $_POST['woocommerce_' . $this->id . '_node_endpoint'] = $new_node_endpoint;
+      $this->node_endpoint = $new_node_endpoint;
+
+      $this->network = $network;
+
+      try {
+        // the wallet will restart automatically in xelis_payment.php
+        $xelis_wallet->close_wallet();
+      } catch (Exception $e) {
+        $this->add_error("Can't close wallet" . $e->getMessage());
+        $this->display_errors();
+        return false;
+      }
+    }
 
     $node_endpoint = $_POST['woocommerce_' . $this->id . '_node_endpoint'];
     if ($node_endpoint !== $this->node_endpoint) {

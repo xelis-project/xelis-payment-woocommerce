@@ -51,6 +51,11 @@ function activate_xelis_plugin()
     return;
   }
 
+  // make sure wallet is not runnning while activating
+  // can happen if we install a new version of the plugin
+  $xelis_wallet = new Xelis_Wallet();
+  $xelis_wallet->close_wallet();
+
   $xelis_package = new Xelis_Package();
   $xelis_package->install_package();
 }
@@ -59,11 +64,18 @@ register_activation_hook(__FILE__, 'activate_xelis_plugin');
 
 // make sure wallet is running - start otherwise
 function run_wallet() {
-  $xelis_wallet = new Xelis_Wallet();
-  if (!$xelis_wallet->is_running()) {
-    $xelis_wallet->start_wallet();
+  try {
+    $xelis_wallet = new Xelis_Wallet();
+    if (!$xelis_wallet->is_running()) {
+      $xelis_wallet->start_wallet();
+      // TODO: handle error
+    }
+  } catch (Exception $e) {
+    error_log($e->getMessage());
   }
 }
+
+run_wallet();
 
 // add the gateway to WooCommerce payment method
 function add_xelis_payment_gateway($gateways)

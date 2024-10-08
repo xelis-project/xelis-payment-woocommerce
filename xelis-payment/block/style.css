@@ -1,13 +1,28 @@
 .xelis-payment-label {
   display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.xelis-payment-label-value {
+  display: flex;
   gap: .5rem;
   flex-direction: row;
   align-items: center;
 }
 
-.xelis-payment-label svg {
+.xelis-payment-label-value svg {
   width: 1.8rem;
   height: 1.8rem;
+}
+
+.xelis-payment-label-network {
+  border: .15rem solid black;
+  padding: .1rem .5rem;
+  font-size: .9rem;
+  font-weight: bold;
 }
 
 .xelis-payment-content {

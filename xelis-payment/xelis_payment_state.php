@@ -22,8 +22,9 @@ class Xelis_Payment_State_Object
   public string $tx;
   public string $refund_tx;
   public float $incorrect_xel;
+  public string $network;
 
-  public function __construct($payment_hash, $cart_hash, $topoheight, $expiration, $addr, $xel)
+  public function __construct($payment_hash, $cart_hash, $topoheight, $expiration, $addr, $xel, $network)
   {
     $this->payment_hash = $payment_hash;
     $this->cart_hash = $cart_hash;
@@ -36,6 +37,7 @@ class Xelis_Payment_State_Object
     $this->tx = "";
     $this->refund_tx = "";
     $this->incorrect_xel = 0;
+    $this->network = $network;
   }
 }
 
@@ -48,13 +50,18 @@ class Xelis_Payment_State
     $customer_id = WC()->session->get_customer_id();
     $payment_hash = $customer_id . ":" . $cart_hash;
 
+    $xelis_gateway = new Xelis_Payment_Gateway();
+    if ($xelis_gateway->wallet_addr === '') {
+      throw new Exception("Xelis gateway wallet address not set");
+    }
+
     $xelis_wallet = new Xelis_Wallet();
 
     try {
       $addr = $xelis_wallet->get_address($payment_hash);
       $topoheight = $xelis_wallet->get_topoheight();
     } catch (Exception $e) {
-      error_log(message: 'Error in init_payment_state: ' . $e);
+      error_log(message: 'Error in init_payment_state: ' . $e->getMessage());
       throw new Exception("Can't initiate XELIS payment gateway");
     }
 
@@ -62,13 +69,23 @@ class Xelis_Payment_State
     try {
       $xel = $xelis_data->convert_usd_to_xel($total);
     } catch (Exception $e) {
-      error_log('Error in init_payment_state: ' . $e);
+      error_log('Error in init_payment_state: ' . $e->getMessage());
       throw new Exception("Can't initiate XELIS payment gateway");
     }
 
     $expiration = time() + $timeout;
+    $network = $xelis_wallet->get_network();
 
-    $state = new Xelis_Payment_State_Object($payment_hash, $cart_hash, $topoheight, $expiration, $addr, $xel);
+    $state = new Xelis_Payment_State_Object(
+      $payment_hash,
+      $cart_hash,
+      $topoheight,
+      $expiration,
+      $addr,
+      $xel,
+      $network
+    );
+
     $this->set_payment_state($state);
     return $state;
   }
@@ -106,7 +123,7 @@ class Xelis_Payment_State
       try {
         $txs = $xelis_wallet->get_incoming_transactions($state->topoheight);
       } catch (Exception $e) {
-        error_log('Error in process_payment_state: ' . $e);
+        error_log('Error in process_payment_state: ' . $e->getMessage());
         return;
       }
 
@@ -130,7 +147,7 @@ class Xelis_Payment_State
                     $this->set_payment_state($state);
                     break 2;
                   } catch (Exception $e) {
-                    error_log('Error in process_payment_state: ' . $e);
+                    error_log('Error in process_payment_state: ' . $e->getMessage());
                   }
                 case Xelis_Payment_Status::EXPIRED:
                   try {
@@ -142,7 +159,7 @@ class Xelis_Payment_State
                     $this->set_payment_state($state);
                     break 2;
                   } catch (Exception $e) {
-                    error_log('Error in process_payment_state: ' . $e);
+                    error_log('Error in process_payment_state: ' . $e->getMessage());
                   }
               }
             } else {
@@ -158,7 +175,7 @@ class Xelis_Payment_State
                 $this->set_payment_state($state);
                 break 2;
               } catch (Exception $e) {
-                error_log('Error in process_payment_state: ' . $e);
+                error_log('Error in process_payment_state: ' . $e->getMessage());
               }
             }
           }

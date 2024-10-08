@@ -60,6 +60,7 @@ class Xelis_Payment_Method extends AbstractPaymentMethodType
     return [
       'title' => $this->get_setting('title'),
       'description' => $this->get_setting('description'),
+      'network' => $this->get_setting('network'),
       'supports' => $this->get_supported_features(),
       //'payment_state' => $state
     ];

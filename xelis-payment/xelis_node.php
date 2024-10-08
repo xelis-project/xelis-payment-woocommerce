@@ -55,6 +55,10 @@ class Xelis_Node
       return $data->result;
     }
 
+    if (isset($data->error)) {
+      throw new Exception($data->error->message);
+    }
+
     return $data;
   }
 }

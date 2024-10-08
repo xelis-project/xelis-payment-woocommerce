@@ -8,6 +8,7 @@ const { registerPaymentMethod } = wc.wcBlocksRegistry;
 const { getSetting } = wc.wcSettings;
 
 const settings = getSetting('xelis_payment_data');
+console.log(settings);
 
 async function fetch_payment_state({ reload } = { reload: false, update: false }) {
   let endpoint = `/?rest_route=/xelis_payment/payment_state`;
@@ -237,8 +238,13 @@ const Content = (props) => {
 
 const Label = () => {
   return <div className="xelis-payment-label">
-    <Icons.Xelis fillColor1="#02FFCF" fillColor2="black" />
-    <div>XELIS Payment</div>
+    <div className="xelis-payment-label-value">
+      <Icons.Xelis fillColor1="#02FFCF" fillColor2="black" />
+      <div>XELIS Payment</div>
+    </div>
+    {settings.network !== "mainnet" && <div className="xelis-payment-label-network">
+      {settings.network}
+    </div>}
   </div>
 }
 
