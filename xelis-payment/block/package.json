@@ -5,7 +5,7 @@
   "private": "true",
   "scripts": {
     "build": "esbuild ./index.js --loader:.js=jsx --external:react --bundle --outdir=build",
-    "watch": "npm run build -- --watch"
+    "start": "npm run build -- --watch"
   },
   "author": "g45t345rt",
   "license": "ISC",

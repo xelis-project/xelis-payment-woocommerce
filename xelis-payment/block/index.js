@@ -59,6 +59,7 @@ const Content = (props) => {
 
   const copy = useCallback(() => {
     navigator.clipboard.writeText(payment_state.addr);
+    window.alert(`The integrated address was copied.`);
   }, [payment_state]);
 
   useEffect(() => {

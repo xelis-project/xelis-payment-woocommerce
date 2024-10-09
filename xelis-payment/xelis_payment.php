@@ -8,6 +8,7 @@ require __DIR__ . '/xelis_wallet.php';
 require __DIR__ . '/xelis_payment_gateway.php';
 require __DIR__ . '/xelis_payment_method.php';
 require __DIR__ . '/xelis_data.php';
+require __DIR__ . '/xelis_wallet_logs_page.php';
 
 /**
  * Plugin Name: XELIS Payment
@@ -68,7 +69,6 @@ function run_wallet() {
     $xelis_wallet = new Xelis_Wallet();
     if (!$xelis_wallet->is_running()) {
       $xelis_wallet->start_wallet();
-      // TODO: handle error
     }
   } catch (Exception $e) {
     error_log($e->getMessage());

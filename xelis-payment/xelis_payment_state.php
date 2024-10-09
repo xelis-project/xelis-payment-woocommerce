@@ -137,7 +137,7 @@ class Xelis_Payment_State
           if ($transfer->extra_data === $state->payment_hash) {
             $atomic_amount = $xelis_wallet->unshift_xel($state->xel);
             if ($transfer->amount === $atomic_amount) {
-              switch ($transfer->status) {
+              switch ($state->status) {
                 case Xelis_Payment_Status::WAITING:
                   try {
                     // redirect funds to the store owner wallet
@@ -149,6 +149,7 @@ class Xelis_Payment_State
                   } catch (Exception $e) {
                     error_log('Error in process_payment_state: ' . $e->getMessage());
                   }
+                  break;
                 case Xelis_Payment_Status::EXPIRED:
                   try {
                     // we found a valid tx but the payment window expired so we refund instantly
@@ -161,6 +162,7 @@ class Xelis_Payment_State
                   } catch (Exception $e) {
                     error_log('Error in process_payment_state: ' . $e->getMessage());
                   }
+                  break;
               }
             } else {
               try {

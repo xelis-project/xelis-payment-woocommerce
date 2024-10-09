@@ -23,6 +23,11 @@ class Xelis_Wallet
     return $this->fetch("get_network");
   }
 
+  public function get_version()
+  {
+    return $this->fetch("get_version");
+  }
+
   public function get_transaction(string $tx_id)
   {
     return $this->fetch("get_transaction", ["hash" => $tx_id]);
@@ -41,11 +46,17 @@ class Xelis_Wallet
     return $this->fetch("build_transaction", [
       "broadcast" => true,
       "transfers" => [
-        "amount" => $amount,
-        "asset" => "",
-        "destination" => $destination,
+        array(
+          "amount" => $amount,
+          "asset" => "0000000000000000000000000000000000000000000000000000000000000000", // represent xelis native asset
+          "destination" => $destination,
+        )
       ]
     ]);
+  }
+
+  public function get_balance() {
+    return $this->fetch("get_balance");
   }
 
   public function is_online()
@@ -137,7 +148,7 @@ class Xelis_Wallet
   {
     $pid = $this->get_wallet_pid();
     if ($pid) {
-      // TODO: window
+      // TODO: windows
       return file_exists('/proc/' . $pid);
     }
 
@@ -148,7 +159,7 @@ class Xelis_Wallet
   {
     $pid = $this->get_wallet_pid();
     if ($pid) {
-      // TODO: window
+      // TODO: windows
       $success = posix_kill($pid, 15); // 15 is SIGTERM
       if (!$success) {
         throw new Exception(posix_get_last_error());
@@ -159,6 +170,32 @@ class Xelis_Wallet
     }
 
     return false;
+  }
+
+  public function get_output()
+  {
+    $lines = file(__DIR__ . '/wallet_output.log', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    for ($i = 0; $i < count($lines); $i++) {
+      $lines[$i] = trim($this->remove_ansi_color_codes($lines[$i]));
+    }
+
+    return $lines;
+  }
+
+  public function get_last_output()
+  {
+    $file = new SplFileObject(__DIR__ . '/wallet_output.log');
+    $file->seek(PHP_INT_MAX);
+    $file->seek(max($file->key() - 1, 0));
+    $last_line = $file->current();
+    return trim($this->remove_ansi_color_codes($last_line));
+  }
+
+  public function remove_ansi_color_codes($string)
+  {
+    $value = preg_replace('/\x1B\[[0-?9;]*m/', '', $string);
+    $value = str_replace('[2K', '', $value);
+    return $value;
   }
 
   public function start_wallet()
@@ -180,32 +217,14 @@ class Xelis_Wallet
       . " --rpc-bind-address 127.0.0.1:8081 "
       . " --rpc-username admin "
       . " --rpc-password admin "
-      . " --force-stable-balance";
+      . " --force-stable-balance ";
 
-    $descriptorspec = [
-      0 => ["pipe", "r"], // stdin
-      1 => ["pipe", "w"], // stdout
-      2 => ["pipe", "w"]  // stderr
-    ];
+    // https://stackoverflow.com/questions/3819398/php-exec-command-or-similar-to-not-wait-for-result
+    // TODO: windows
 
-    $process = proc_open($xelis_wallet_cmd, $descriptorspec, $pipes);
-    //$process_info = proc_get_status($process);
-    //$pid = $process_info["pid"];
+    $wallet_output = __DIR__ . "/wallet_output.log";
 
-    //if ($this->store_wallet_pid($pid) === false) {
-    // throw new Exception("can't store xelis wallet process id");
-    //}
-
-    if (is_resource($process)) {
-      fclose($pipes[0]);
-      $output = stream_get_contents($pipes[1]);
-      fclose($pipes[1]);
-      $err_output = stream_get_contents($pipes[2]);
-      fclose($pipes[2]);
-
-      if ($err_output) {
-        throw new Exception($err_output);
-      }
-    }
+    exec('bash -c "exec nohup setsid ' . $xelis_wallet_cmd . ' > ' . $wallet_output . ' 2>&1 &"');
+    return;
   }
 }

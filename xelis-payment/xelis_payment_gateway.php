@@ -34,7 +34,11 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
 
     $this->init_form_fields();
 
-    add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
+    global $initialized;
+    if (!$initialized) { // make sure we don't add multiple action by init new Xelis_Payment_Gateway() - we don't use singleton
+      add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
+      $initialized = true;
+    }
   }
 
   public function get_settings()
@@ -47,6 +51,26 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
     $enabled = $this->enabled === "yes" ? true : false;
     // disabling the plugin does not close the wallet in case there are pending payments
     // if you want to change the network you must wait until all payments have confirmed or expired
+
+    $xelis_wallet = new Xelis_Wallet();
+
+    $status = "";
+    try {
+
+      $online = $xelis_wallet->is_online();
+      $status = $online ? 'Online' : 'Offline';
+      $network = $xelis_wallet->get_network();
+      $status = $status . " (" . $network . ")";
+      $version = $xelis_wallet->get_version();
+      $status = $status . " - v". $version . "";
+    } catch (Exception $e) {
+      $status = $e->getMessage();
+    }
+    
+    $this->update_option("status", $status);
+
+    $log = $xelis_wallet->get_last_output();
+    $this->update_option("log", $log);
 
     $this->form_fields = array(
       'enabled' => array(
@@ -64,13 +88,24 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
           'dev' => __('Dev', 'xelis_payment'),
         ),
         'description' => $enabled ? __('Disable the plugin if you want to change the network.', 'xelis_payment') : __('Change XELIS wallet network. You will need to set the node endpoint and wallet address again!', 'xelis_payment'),
-        'default' => 'mainnet',
         'disabled' => $enabled
+      ),
+      'status' => array(
+        'title' => __('Wallet status', 'xelis_payment'),
+        'type' => 'text',
+        'description' => "Check logs or try refreshing page if there is an error after changing the network.",
+        'disabled' => true,
+      ),
+      'log' => array(
+        'title' => __('Wallet log', 'xelis_payment'),
+        'type' => 'textarea',
+        'description' => "Last wallet output message.",
+        'disabled' => true,
       ),
       'node_endpoint' => array(
         'title' => __('Node endpoint', 'xelis_payment'),
         'type' => 'text',
-        'description' => __('Set the node endpoint url. Default is https://node.xelis.io.', 'xelis_payment'),
+        'description' => __('Set the node endpoint url. Default is https://node.xelis.io for Mainnet.', 'xelis_payment'),
         'default' => 'https://node.xelis.io',
       ),
       'wallet_addr' => array(
@@ -98,8 +133,6 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
   {
     // looks like you can't remove the success message even if return false :(
     // https://github.com/woocommerce/woocommerce/blob/37903778fba449da0422207e1ce4f150f02aa0a2/plugins/woocommerce/includes/admin/class-wc-admin-settings.php#L88
-
-    // also errors are printed twice :S ???
 
     $network = $_POST['woocommerce_' . $this->id . '_network'];
     if ($network && $network !== $this->network) {
