@@ -62,11 +62,11 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
       $network = $xelis_wallet->get_network();
       $status = $status . " (" . $network . ")";
       $version = $xelis_wallet->get_version();
-      $status = $status . " - v". $version . "";
+      $status = $status . " - v" . $version . "";
     } catch (Exception $e) {
       $status = $e->getMessage();
     }
-    
+
     $this->update_option("status", $status);
 
     $log = $xelis_wallet->get_last_output();
@@ -186,10 +186,14 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
         $node->get_version(); // check if you can fetch the endpoint and its valid
 
         $xelis_wallet = new Xelis_Wallet();
+        // set offline or set_online_mode won't assign new endpoint if connected
+        if ($xelis_wallet->is_online()) {
+          $xelis_wallet->set_offline_mode();
+        }
+
         $xelis_wallet->set_online_mode($node_endpoint);
       } catch (Exception $e) {
         $this->add_error($e->getMessage());
-        $this->add_error("Not a valid XELIS node.");
         $this->display_errors();
         return false;
       }
@@ -264,10 +268,10 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
   public function process_payment($order_id)
   {
     $xelis_state = new Xelis_Payment_State();
-    $xelis_state->process_payment_state(); // this is call periodically from js it updates the state of payment_data
+    //$xelis_state->process_payment_state(); // this is call periodically from js it updates the state of payment_data - we call it again just to be sure
     $state = $xelis_state->get_payment_state();
 
-    if ($state->status !== Xelis_Payment_Status::VALID) {
+    if ($state->status !== Xelis_Payment_Status::PROCESSED) {
       /* wc_add_notice('Your payment could not be processed. Please try again.', 'error');
       WC()->session->set('wc_notices', [array("notice" => "Your payment could not be processed. Please try again when the transaction has been confirmed by the network.")]);
       $notices = WC()->session->get('wc_notices', array());
@@ -282,8 +286,11 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
 
     $order = wc_get_order($order_id);
     $order->add_meta_data("xelis_tx", $state->tx);
+    $order->add_meta_data("xelis_redirect_tx", $state->redirect_tx);
+    $order->add_meta_data("xelis_amount", $state->xel);
     $order->payment_complete();
     $order->add_order_note('Payment received via XELIS Payment Gateway.');
+    $xelis_state->clear_payment_state();
 
     return array(
       'result' => 'success',

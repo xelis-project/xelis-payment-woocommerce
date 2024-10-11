@@ -46,7 +46,11 @@ class Xelis_Rest
     // with reload param - force reload payment state and request new quote
     // also reload payment if cart data changed
     $reload = $request->get_param('reload');
-    if ($reload || $state->cart_hash !== $cart_hash) {
+    if ($reload) {
+      $state = null;
+    }
+
+    if ($state && $state->cart_hash !== $cart_hash) {
       $state = null;
     }
 

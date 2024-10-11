@@ -2,6 +2,8 @@
 
 class Xelis_Wallet
 {
+  public static string $XELIS_ASSET = "0000000000000000000000000000000000000000000000000000000000000000";
+
   public function get_address($integrated_data = null)
   {
     if ($integrated_data) {
@@ -33,29 +35,66 @@ class Xelis_Wallet
     return $this->fetch("get_transaction", ["hash" => $tx_id]);
   }
 
-  public function get_incoming_transactions(int $start_topo)
+  public function get_incoming_transactions(int $start_topoheight)
   {
     return $this->fetch("list_transactions", [
-      "min_topoheight" => $start_topo,
+      "min_topoheight" => $start_topoheight,
       "accept_incoming" => true,
+      "accept_outgoing" => false,
+      "accept_coinbase" => false,
+      "accept_burn" => false
     ]);
   }
 
-  public function send_transaction(int $amount, string $destination)
+  public function redirect_xelis_funds(int $amount, string $destination)
   {
-    return $this->fetch("build_transaction", [
+    $test = $this->get_balance();
+    error_log($test);
+
+    $fee = $this->estimate_fees($amount, Xelis_Wallet::$XELIS_ASSET, $destination);
+    $amount -= $fee;
+    return $this->send_funds($amount, Xelis_Wallet::$XELIS_ASSET, $destination, $fee);
+  }
+
+  public function send_funds(int $amount, string $asset, string $destination, int $fee = null)
+  {
+    $transfers = [
+      array(
+        "amount" => $amount,
+        "asset" => $asset,
+        "destination" => $destination,
+      )
+    ];
+
+    $params = [
       "broadcast" => true,
-      "transfers" => [
-        array(
-          "amount" => $amount,
-          "asset" => "0000000000000000000000000000000000000000000000000000000000000000", // represent xelis native asset
-          "destination" => $destination,
-        )
-      ]
+      "transfers" => $transfers
+    ];
+
+    if ($fee) {
+      $params["fee"] = array("value" => $fee);
+    }
+
+    return $this->fetch("build_transaction", $params);
+  }
+
+  public function estimate_fees(int $amount, string $asset, string $destination)
+  {
+    $transfers = [
+      array(
+        "amount" => $amount,
+        "asset" => $asset,
+        "destination" => $destination,
+      )
+    ];
+
+    return $this->fetch("estimate_fees", [
+      "transfers" => $transfers
     ]);
   }
 
-  public function get_balance() {
+  public function get_balance()
+  {
     return $this->fetch("get_balance");
   }
 
@@ -70,6 +109,11 @@ class Xelis_Wallet
       "daemon_address" => $endpoint,
       "auto_reconnect" => true,
     ]);
+  }
+
+  public function set_offline_mode()
+  {
+    return $this->fetch("set_offline_mode");
   }
 
   public function fetch(string $method, array $params = null)
@@ -216,8 +260,8 @@ class Xelis_Wallet
       . " --precomputed-tables-path " . __DIR__ . "/precomputed_tables/"
       . " --rpc-bind-address 127.0.0.1:8081 "
       . " --rpc-username admin "
-      . " --rpc-password admin "
-      . " --force-stable-balance ";
+      . " --rpc-password admin ";
+      //. " --force-stable-balance ";
 
     // https://stackoverflow.com/questions/3819398/php-exec-command-or-similar-to-not-wait-for-result
     // TODO: windows

@@ -16,6 +16,17 @@ async function fetch_payment_state({ reload } = { reload: false, update: false }
   return await fetch(endpoint);
 }
 
+const get_explorer_tx_link = (tx) => {
+  switch (settings.network) {
+    case "mainnet":
+      return `https://explorer.xelis.io/txs/${tx}`;
+    case "testnet":
+      return `https://testnet-explorer.xelis.io/txs/${tx}`;
+  }
+
+  return "";
+}
+
 const Content = (props) => {
   const [init_loading, set_init_loading] = useState(false);
   const [init_error, set_init_error] = useState();
@@ -134,9 +145,10 @@ const Content = (props) => {
         </div>
       </div>
     ];
-
+console.log(payment_state)
     switch (payment_state.status) {
       case `waiting`:
+      case `processing`:
         render = [
           ...render,
           <div className="xelis-payment-waiting">
@@ -183,15 +195,15 @@ const Content = (props) => {
           <div>
             <div>We found a valid transaction that was confirm after the expiration payment window. A refund has been issued.</div>
             <div>
-              Your tx:
-              <a href={`https://explorer.xelis.io/txs/${payment_state.tx}`} target="_blank">
+              Your tx:&nbsp;
+              <a href={get_explorer_tx_link(payment_state.tx)} target="_blank">
                 {payment_state.tx}
               </a>
             </div>
             <div>
-              Refund tx:
-              <a href={`https://explorer.xelis.io/txs/${payment_state.tx_refund}`} target="_blank">
-                {payment_state.tx_refund}
+              Refund tx:&nbsp;
+              <a href={get_explorer_tx_link(payment_state.refund_tx)} target="_blank">
+                {payment_state.refund_tx}
               </a>
             </div>
           </div>
@@ -201,30 +213,37 @@ const Content = (props) => {
         render = [
           <div>
             <div>We found a valid transaction with the incorrect amount of {payment_state.incorrect_amount} XEL. A refund has been issued.</div>
+            <div>You sent {payment_state.incorrect_xel} XEL, but {payment_state.xel} XEL was expected.</div>
             <div>
-              Your tx:
-              <a href={`https://explorer.xelis.io/txs/${payment_state.tx}`} target="_blank">
+              Your tx:&nbsp;
+              <a href={get_explorer_tx_link(payment_state.tx)} target="_blank">
                 {payment_state.tx}
               </a>
             </div>
             <div>
-              Refund tx:
-              <a href={`https://explorer.xelis.io/txs/${payment_state.tx}`} target="_blank">
-                {payment_state.tx}
+              Refund tx:&nbsp;
+              <a href={get_explorer_tx_link(payment_state.refund_tx)} target="_blank">
+                {payment_state.refund_tx}
               </a>
             </div>
           </div>
         ];
         break;
-      case `valid`:
+      case `processed`:
         render = [
-          <div>We have succesfully comfirmed your XELIS transaction. It is valid and you can now finish placing your order.</div>,
+          <div>We have succesfully comfirmed your XELIS transaction. You can now finish placing your order.</div>,
           <div>
-            Your tx:
-            <a href={`https://explorer.xelis.io/txs/${payment_state.tx}`} target="_blank">
+            You still have <span className="xelis-payment-highlight">
+              <Icons.Timer />
+              {pretty_ms(duration, { secondsDecimalDigits: 0 })}
+            </span> to place your order.
+          </div>,
+          <div>
+            Your tx:&nbsp;
+            <a href={get_explorer_tx_link(payment_state.tx)} target="_blank">
               {payment_state.tx}
             </a>
-          </div>
+          </div>,
         ];
         break;
     }
