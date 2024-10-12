@@ -99,9 +99,14 @@ class Xelis_Wallet
     ]);
   }
 
-  public function get_balance()
+  public function get_balance(string $asset = null)
   {
-    return $this->fetch("get_balance");
+    $params = [];
+    if ($asset) {
+      $params = ["hash" => $asset];
+    }
+
+    return $this->fetch("get_balance", $params);
   }
 
   public function is_online()

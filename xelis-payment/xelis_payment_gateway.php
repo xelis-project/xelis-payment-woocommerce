@@ -111,7 +111,7 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
       'wallet_addr' => array(
         'title' => __('Wallet address', 'xelis_payment'),
         'type' => 'text',
-        'description' => __('Set the address of your XELIS wallet to receive funds.', 'xelis_payment'),
+        'description' => __('Set the address of your XELIS wallet to redirect hot wallet funds automatically.', 'xelis_payment'),
         'default' => '',
       ),
       'payment_timeout' => array(
@@ -202,13 +202,15 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
     $wallet_addr = $_POST['woocommerce_' . $this->id . '_wallet_addr'];
     if ($wallet_addr !== $this->wallet_addr) {
       try {
-        $node = new Xelis_Node($this->node_endpoint);
-        $result = $node->validate_address($wallet_addr);
-        if ($result->is_valid !== true) {
-          $this->add_error(json_encode($result));
-          $this->add_error("Not a valid XELIS wallet address.");
-          $this->display_errors();
-          return false;
+        if ($wallet_addr !== "") { // possible to set wallet_addr back to empty
+          $node = new Xelis_Node($this->node_endpoint);
+          $result = $node->validate_address($wallet_addr);
+          if ($result->is_valid !== true) {
+            $this->add_error(json_encode($result));
+            $this->add_error("Not a valid XELIS wallet address.");
+            $this->display_errors();
+            return false;
+          }
         }
       } catch (Exception $e) {
         $this->add_error($e->getMessage());

@@ -53,8 +53,9 @@ function render_page()
   ?>
   <div class="wrap">
     <h1><?php esc_html_e('XELIS Wallet', 'xelis_payment'); ?></h1>
+    <a href="/wp-admin/admin.php?page=wc-settings&tab=checkout&section=xelis_payment">Go to XELIS Payment settings</a>
     <h2>Balance</h2>
-    <div style="font-weight: bold; font-size: 1.5rem;"><?php echo $balance ?> XEL</div>
+    <div style="font-size: 1.5rem;"><?php echo $balance ?> XEL</div>
     <h2>Send funds</h2>
     <form method="post" action="">
       <label for="amount">Amount:</label><br>

@@ -55,12 +55,6 @@ class Xelis_Payment_State
     $cart_hash = WC()->cart->get_cart_hash();
     $customer_id = WC()->session->get_customer_id();
     $payment_hash = $customer_id . ":" . $cart_hash;
-
-    $xelis_gateway = new Xelis_Payment_Gateway();
-    if ($xelis_gateway->wallet_addr === '') {
-      throw new Exception("Xelis gateway wallet address not set");
-    }
-
     $xelis_wallet = new Xelis_Wallet();
 
     try {
@@ -216,16 +210,20 @@ class Xelis_Payment_State
             }
 
             // 4. all is good so we redirect funds to the store owner wallet and mark as processed
-            try {
-              $redirect_tx = $xelis_wallet->redirect_xelis_funds($transfer->amount, $owner_wallet_addr);
-            } catch (Exception $e) {
-              error_log('Error sending funds: ' . $e->getMessage());
-              break 2;
+            if ($owner_wallet_addr) {
+              // redirect funds only if redirect wallet addr is set in config
+              // otherwise the owner needs to use the Xelis Wallet admin page and redirect funds manually in his wallet
+              try {
+                $redirect_tx = $xelis_wallet->redirect_xelis_funds($transfer->amount, $owner_wallet_addr);
+                $state->redirect_tx = $redirect_tx->hash;
+              } catch (Exception $e) {
+                error_log('Error sending funds: ' . $e->getMessage());
+                break 2;
+              }
             }
 
             $state->status = Xelis_Payment_Status::PROCESSED;
             $state->tx = $tx->hash;
-            $state->redirect_tx = $redirect_tx->hash;
             $state->from_addr = $from;
             $this->set_payment_state($state);
 
