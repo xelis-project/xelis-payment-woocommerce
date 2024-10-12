@@ -13,9 +13,14 @@ class Xelis_Rest
 
   function route_payment_state($request)
   {
+    $xelis_wallet = new Xelis_Wallet();
     $xelis_state = new Xelis_Payment_State();
     $gateway = new Xelis_Payment_Gateway();
     $timeout = (int) $gateway->payment_timeout * 60; // payment_timeout in min so we multiply by 60 for timeout in seconds
+
+    if (!$xelis_wallet->is_online()) {
+      return new WP_REST_Response('The node is not online.', 400);
+    }
 
     // don't initiate payment window if disabled
     // this checks if enabled, if cart is available and total is higher than 0
@@ -27,12 +32,12 @@ class Xelis_Rest
         return new WP_REST_Response($state, 200);
       }
 
-      return new WP_REST_Response('XELIS Gateway unavailable', 400);
+      return new WP_REST_Response('XELIS Gateway unavailable.', 400);
     }
 
     $cart_hash = WC()->cart->get_cart_hash();
     if (WC()->cart->total === 0) {
-      return new WP_REST_Response('Cart is empty', 400);
+      return new WP_REST_Response('Cart is empty.', 400);
     }
 
     $state = $xelis_state->get_payment_state();

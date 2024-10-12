@@ -24,6 +24,9 @@ function render_page()
   $balance_atomic = $xelis_wallet->get_balance();
   $balance = $xelis_wallet->shift_xel($balance_atomic);
   $logs = $xelis_wallet->get_output();
+  $status = $xelis_wallet->get_status();
+  $is_online = $xelis_wallet->is_online();
+  $xelis_gateway = new Xelis_Payment_Gateway();
 
   $filter_address = null;
   $accept_incoming = true;
@@ -88,6 +91,13 @@ function render_page()
       } catch (Exception $e) {
       }
     }
+
+    if (isset($_POST["reconnect"])) {
+      try {
+        $xelis_wallet->set_online_mode($xelis_gateway->node_endpoint);
+      } catch (Exception $e) {
+      }
+    }
   }
 
   try {
@@ -119,12 +129,35 @@ function render_page()
       width: 100%;
       border-collapse: collapse;
     }
+
+    .config {
+      font-size: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: .25rem;
+    }
   </style>
   <div class="wrap">
     <h1><?php esc_html_e('XELIS Wallet', 'xelis_payment'); ?></h1>
-    <a href="/wp-admin/admin.php?page=wc-settings&tab=checkout&section=xelis_payment">Go to XELIS Payment settings</a>
+    <h2>Config</h2>
+    <div class="config">
+      <div>Status: <?php echo $status ?></div>
+      <div>Enabled: <?php echo $xelis_gateway->enabled ?></div>
+      <div>Network: <?php echo $xelis_gateway->network ?></div>
+      <div>Node endpoint: <?php echo $xelis_gateway->node_endpoint ?></div>
+    </div>
+    <?php if (!$is_online): ?>
+      <br>
+      <form method="post" action="">
+        <input type="submit" name="reconnect" value="Reconnect">
+      </form>
+    <?php endif; ?>
+    <br>
+    <div>
+      <a href="/wp-admin/admin.php?page=wc-settings&tab=checkout&section=xelis_payment">Go to XELIS Payment settings</a>
+    </div>
     <h2>Balance</h2>
-    <div style="font-size: 1.5rem;"><?php echo $balance ?> XEL</div>
+    <div style="font-size: 1.2rem;"><?php echo $balance ?> XEL</div>
     <h2>Send funds</h2>
     <form method="post" action="">
       <label for="amount">Amount:</label><br>
@@ -200,10 +233,10 @@ function render_page()
             <?php endif; ?>
           </tr>
           <?php if (isset($tx->incoming)): ?>
-            <?php foreach ($tx->incoming->transfers as $idx=>$transfer): ?>
+            <?php foreach ($tx->incoming->transfers as $idx => $transfer): ?>
               <tr>
                 <td colspan="4">
-                  <?php echo $idx+1 ?>.
+                  <?php echo $idx + 1 ?>.
                   Amount: <?php echo esc_html($transfer->amount); ?>
                   From: <?php echo esc_html($tx->incoming->from); ?>
                   Extra Data: <?php echo esc_html($transfer->extra_data); ?>
@@ -213,10 +246,10 @@ function render_page()
             <?php endforeach; ?>
           <?php endif; ?>
           <?php if (isset($tx->outgoing)): ?>
-            <?php foreach ($tx->outgoing->transfers as $idx=>$transfer): ?>
+            <?php foreach ($tx->outgoing->transfers as $idx => $transfer): ?>
               <tr>
                 <td colspan="4">
-                  <?php echo $idx+1 ?>.
+                  <?php echo $idx + 1 ?>.
                   Amount: <?php echo esc_html($transfer->amount); ?>
                   Destination: <?php echo esc_html($transfer->destination); ?>
                   Extra Data: <?php echo esc_html($transfer->extra_data); ?>

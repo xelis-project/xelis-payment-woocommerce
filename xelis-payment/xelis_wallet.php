@@ -35,6 +35,21 @@ class Xelis_Wallet
     return $this->fetch("get_transaction", ["hash" => $tx_id]);
   }
 
+  public function get_status(): string
+  {
+    try {
+      $online = $this->is_online();
+      $status = $online ? 'Online' : 'Offline';
+      $network = $this->get_network();
+      $status = $status . " (" . $network . ")";
+      $version = $this->get_version();
+      $status = $status . " - v" . $version . "";
+      return $status;
+    } catch (Exception $e) {
+      return $e->getMessage();
+    }
+  }
+
   public function get_transactions(int $min_topoheight, bool $accept_incoming, bool $accept_outgoing, bool $accept_coinbase, bool $accept_burn, string $address = null)
   {
     $params = [
@@ -114,7 +129,8 @@ class Xelis_Wallet
     return $this->fetch("is_online");
   }
 
-  public function rescan() {
+  public function rescan()
+  {
     return $this->fetch("rescan");
   }
 

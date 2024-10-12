@@ -53,21 +53,7 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
     // if you want to change the network you must wait until all payments have confirmed or expired
 
     $xelis_wallet = new Xelis_Wallet();
-
-    $status = "";
-    try {
-
-      $online = $xelis_wallet->is_online();
-      $status = $online ? 'Online' : 'Offline';
-      $network = $xelis_wallet->get_network();
-      $status = $status . " (" . $network . ")";
-      $version = $xelis_wallet->get_version();
-      $status = $status . " - v" . $version . "";
-    } catch (Exception $e) {
-      $status = $e->getMessage();
-    }
-
-    $this->update_option("status", $status);
+    $this->update_option("status", $xelis_wallet->get_status());
 
     $log = $xelis_wallet->get_last_output();
     $this->update_option("log", $log);
