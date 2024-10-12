@@ -129,7 +129,13 @@ class Xelis_Payment_State
 
       $xelis_wallet = new Xelis_Wallet();
       try {
-        $incoming_txs = $xelis_wallet->get_incoming_transactions($state->start_topoheight);
+        $incoming_txs = $xelis_wallet->get_transactions(
+          $state->start_topoheight,
+          true,
+          false,
+          false,
+          false
+        );
       } catch (Exception $e) {
         error_log('Error in process_payment_state: ' . $e->getMessage());
         return;

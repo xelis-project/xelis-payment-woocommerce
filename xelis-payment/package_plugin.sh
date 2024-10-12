@@ -6,7 +6,7 @@ cd ../
 
 PATHS=(
   "./xelis_wallet.php"
-  "./xelis_wallet_logs_page.php"
+  "./xelis_wallet_page.php"
   "./xelis_rest.php"
   "./xelis_payment.php"
   "./xelis_payment_state.php"

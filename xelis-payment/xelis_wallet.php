@@ -35,15 +35,21 @@ class Xelis_Wallet
     return $this->fetch("get_transaction", ["hash" => $tx_id]);
   }
 
-  public function get_incoming_transactions(int $start_topoheight)
+  public function get_transactions(int $min_topoheight, bool $accept_incoming, bool $accept_outgoing, bool $accept_coinbase, bool $accept_burn, string $address = null)
   {
-    return $this->fetch("list_transactions", [
-      "min_topoheight" => $start_topoheight,
-      "accept_incoming" => true,
-      "accept_outgoing" => false,
-      "accept_coinbase" => false,
-      "accept_burn" => false
-    ]);
+    $params = [
+      "min_topoheight" => $min_topoheight,
+      "accept_incoming" => $accept_incoming,
+      "accept_outgoing" => $accept_outgoing,
+      "accept_coinbase" => $accept_coinbase,
+      "accept_burn" => $accept_burn,
+    ];
+
+    if ($address) {
+      $params["address"] = $address;
+    }
+
+    return $this->fetch("list_transactions", $params);
   }
 
   public function redirect_xelis_funds(int $amount, string $destination)
@@ -261,7 +267,7 @@ class Xelis_Wallet
       . " --rpc-bind-address 127.0.0.1:8081 "
       . " --rpc-username admin "
       . " --rpc-password admin ";
-      //. " --force-stable-balance ";
+    //. " --force-stable-balance ";
 
     // https://stackoverflow.com/questions/3819398/php-exec-command-or-similar-to-not-wait-for-result
     // TODO: windows
