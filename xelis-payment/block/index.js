@@ -8,7 +8,6 @@ const { registerPaymentMethod } = wc.wcBlocksRegistry;
 const { getSetting } = wc.wcSettings;
 
 const settings = getSetting('xelis_payment_data');
-console.log(settings);
 
 async function fetch_payment_state({ reload } = { reload: false, update: false }) {
   let endpoint = `/?rest_route=/xelis_payment/payment_state`;
@@ -82,7 +81,12 @@ const Content = (props) => {
         const new_duration = Math.max(0, duration - 1000);
         if (new_duration === 0) {
           clearInterval(interval_id);
-          set_payment_state((s) => ({ ...s, status: `expired` }));
+          set_payment_state((s) => {
+            if (s.status === `waiting`) {
+              return { ...s, status: `expired` };
+            }
+            return s;
+          });
         }
 
         return new_duration;
@@ -115,42 +119,41 @@ const Content = (props) => {
 
   let render = null;
 
-  /*render = [<div>
-    Cannot initialize XELIS payment gateway. Contact store support for assistance.
-  </div>]*/
-
   if (init_error) {
-    render = [<div>{init_error}</div>]
+    render = [<div>{init_error}</div>];
   } else if (!payment_state || init_loading) {
-    render = [<div className="xelis-payment-init-loading">
-      <Icons.Loading className="xelis-payment-loading-icon" />
-      Fetching XEL/USD quote.
-    </div>]
-  } else if (payment_state) {
     render = [
-      <div className="xelis-payment-data">
-        <div>Please send the exact amount of XEL to this address.</div>
-        <div className="xelis-payment-addr">
-          <QRCodeSVG value={payment_state.addr} className="xelis-payment-addr-qrcode" />
-          <div className="xelis-payment-addr-value">
-            <div>{payment_state.addr}</div>
-            <button type="button" onClick={copy} title="Copy integrated address">
-              <Icons.Copy />
-            </button>
-          </div>
-        </div>
-        <div className="xelis-payment-amount">
-          <Icons.Xelis fillColor1="transparent" fillColor2="black" />
-          {payment_state.xel} XEL
-        </div>
+      <div className="xelis-payment-init-loading">
+        <Icons.Loading className="xelis-payment-loading-icon" />
+        Fetching XEL/USD quote.
       </div>
     ];
-console.log(payment_state)
+  } else if (payment_state) {
+    const request_new_quote = <button type="button" onClick={() => reset_payment()} className="xelis-payment-button">
+      <Icons.TimerReset />
+      Request new quote
+    </button>;
+
     switch (payment_state.status) {
       case `waiting`:
       case `processing`:
         render = [
-          ...render,
+          <div className="xelis-payment-data">
+            <div>Please send the exact amount of XEL to this address.</div>
+            <div className="xelis-payment-addr">
+              <QRCodeSVG value={payment_state.addr} className="xelis-payment-addr-qrcode" />
+              <div className="xelis-payment-addr-value">
+                <div>{payment_state.addr}</div>
+                <button type="button" onClick={copy} title="Copy integrated address">
+                  <Icons.Copy />
+                </button>
+              </div>
+            </div>
+            <div className="xelis-payment-amount">
+              <Icons.Xelis fillColor1="transparent" fillColor2="black" />
+              {payment_state.xel} XEL
+            </div>
+          </div>,
           <div className="xelis-payment-waiting">
             <Icons.Loading className="xelis-payment-loading-icon" />
             Waiting for transaction...
@@ -161,25 +164,19 @@ console.log(payment_state)
               {pretty_ms(duration, { secondsDecimalDigits: 0 })}
             </span> to send your transaction and place your order.
           </div>,
-          <div className="xelis-payment-devider" />,
-          <div>
-            <div>Request a new quote ONLY if you haven't sent a transaction yet.</div>
-            <button type="button" onClick={() => reset_payment()} className="xelis-payment-button">
-              <Icons.TimerReset />
-              Request new quote
-            </button>
-          </div>
+          <div className="xelis-payment-divider" />,
+          <div>Don't have enough time? Request a new quote ONLY if you haven't sent a transaction yet.</div>,
+          request_new_quote
         ];
         break;
       case `expired`:
         render = [
-          <div>
+          <div className="xelis-payment-message-error">
+            <Icons.Warning />
             <div>The payment window has timed out. Click the button below to get a new quote.</div>
-            <button type="button" onClick={() => reset_payment()} className="xelis-payment-button">
-              <Icons.TimerReset />
-              Request new quote
-            </button>
           </div>,
+          request_new_quote,
+          <div className="xelis-payment-divider" />,
           <div>
             Did you sent a transaction before the window expired?
             Do not reset the checkout and try to click the button below to check for the transaction and issue a refund.
@@ -192,54 +189,87 @@ console.log(payment_state)
         break;
       case `expired_refund`:
         render = [
+          <div className="xelis-payment-message-error">
+            <Icons.Warning />
+            <div>We found a valid transaction that was confirmed after the expiration payment window. A refund has been issued.</div>
+          </div>,
+          <div className="xelis-payment-divider" />,
           <div>
-            <div>We found a valid transaction that was confirm after the expiration payment window. A refund has been issued.</div>
+            <div>Your transaction</div>
+            <a href={get_explorer_tx_link(payment_state.tx)} target="_blank">
+              {payment_state.tx}
+            </a>
+          </div>,
+          <div className="xelis-payment-divider" />,
+          <div>
+            <div>Refund transaction</div>
+            <a href={get_explorer_tx_link(payment_state.refund_tx)} target="_blank">
+              {payment_state.refund_tx}
+            </a>
+          </div>,
+          request_new_quote
+        ];
+        break;
+      case `wrong_asset`:
+        render = [
+          <div className="xelis-payment-message-error">
+            <Icons.Warning />
             <div>
-              Your tx:&nbsp;
-              <a href={get_explorer_tx_link(payment_state.tx)} target="_blank">
-                {payment_state.tx}
-              </a>
+              <div>We found a valid transaction with the incorrect asset. A refund cannot be issued for this.</div>
+              <div>Contact store owner for support.</div>
             </div>
-            <div>
-              Refund tx:&nbsp;
-              <a href={get_explorer_tx_link(payment_state.refund_tx)} target="_blank">
-                {payment_state.refund_tx}
-              </a>
-            </div>
-          </div>
+          </div>,
+          <div className="xelis-payment-divider" />,
+          <div>
+            <div>Your transaction</div>
+            <a href={get_explorer_tx_link(payment_state.tx)} target="_blank">
+              {payment_state.tx}
+            </a>
+          </div>,
+          request_new_quote
         ];
         break;
       case `wrong_amount_refund`:
         render = [
+          <div className="xelis-payment-message-error">
+            <Icons.Warning />
+            <div>
+              <div>We found a valid transaction with the incorrect amount of {payment_state.incorrect_amount} XEL. A refund has been issued.</div>
+              <div>You sent {payment_state.incorrect_xel} XEL, but {payment_state.xel} XEL was expected.</div>
+            </div>
+          </div>,
+          <div className="xelis-payment-divider" />,
           <div>
-            <div>We found a valid transaction with the incorrect amount of {payment_state.incorrect_amount} XEL. A refund has been issued.</div>
-            <div>You sent {payment_state.incorrect_xel} XEL, but {payment_state.xel} XEL was expected.</div>
-            <div>
-              Your tx:&nbsp;
-              <a href={get_explorer_tx_link(payment_state.tx)} target="_blank">
-                {payment_state.tx}
-              </a>
-            </div>
-            <div>
-              Refund tx:&nbsp;
-              <a href={get_explorer_tx_link(payment_state.refund_tx)} target="_blank">
-                {payment_state.refund_tx}
-              </a>
-            </div>
-          </div>
+            <div>Your transaction</div>
+            <a href={get_explorer_tx_link(payment_state.tx)} target="_blank">
+              {payment_state.tx}
+            </a>
+          </div>,
+          <div className="xelis-payment-divider" />,
+          <div>
+            <div>Refund transaction</div>
+            <a href={get_explorer_tx_link(payment_state.refund_tx)} target="_blank">
+              {payment_state.refund_tx}
+            </a>
+          </div>,
+          request_new_quote
         ];
         break;
       case `processed`:
         render = [
-          <div>We have succesfully comfirmed your XELIS transaction. You can now finish placing your order.</div>,
+          <div className="xelis-payment-message-success">
+            <Icons.Check />
+            <div>We have succesfully comfirmed your XELIS transaction. You can now finish placing your order.</div>
+          </div>,
           <div>
             You still have <span className="xelis-payment-highlight">
               <Icons.Timer />
               {pretty_ms(duration, { secondsDecimalDigits: 0 })}
             </span> to place your order.
           </div>,
+          <div className="xelis-payment-divider" />,
           <div>
-            Your tx:&nbsp;
+            <div>Your transaction</div>
             <a href={get_explorer_tx_link(payment_state.tx)} target="_blank">
               {payment_state.tx}
             </a>
@@ -249,11 +279,9 @@ console.log(payment_state)
     }
   }
 
-  test = <div>You have items in the cart that you cannot pay with XELIS.</div>
-
   return <div className="xelis-payment-content">
     {render}
-  </div>
+  </div>;
 }
 
 const Label = () => {
@@ -265,7 +293,7 @@ const Label = () => {
     {settings.network !== "mainnet" && <div className="xelis-payment-label-network">
       {settings.network}
     </div>}
-  </div>
+  </div>;
 }
 
 registerPaymentMethod({

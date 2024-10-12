@@ -14,8 +14,10 @@
 }
 
 .xelis-payment-label-value svg {
-  width: 1.8rem;
-  height: 1.8rem;
+  min-width: 1.8rem;
+  min-height: 1.8rem;
+  max-width: 1.8rem;
+  max-height: 1.8rem;
 }
 
 .xelis-payment-label-network {
@@ -31,6 +33,10 @@
   flex-direction: column;
   align-items: start;
   container-type: inline-size;
+}
+
+.xelis-payment-content a {
+  word-break: break-all;
 }
 
 .xelis-payment-data {
@@ -54,8 +60,10 @@
 }
 
 .xelis-payment-button svg {
-  width: 1.5rem;
-  height: 1.5rem;
+  min-width: 1.5rem;
+  min-height: 1.5rem;
+  max-width: 1.5rem;
+  max-height: 1.5rem;
 }
 
 .xelis-payment-button:hover {
@@ -110,8 +118,10 @@
 }
 
 .xelis-payment-addr-value button svg {
-  width: 1.5rem;
-  height: 1.5rem;
+  min-width: 1.5rem;
+  min-height: 1.5rem;
+  max-width: 1.5rem;
+  max-height: 1.5rem;
 }
 
 .xelis-payment-amount {
@@ -127,8 +137,10 @@
 }
 
 .xelis-payment-amount svg {
-  width: 2rem;
-  height: 2rem;
+  min-width: 2rem;
+  min-height: 2rem;
+  max-width: 2rem;
+  max-height: 2rem;
 }
 
 .xelis-payment-waiting {
@@ -145,13 +157,17 @@
 }
 
 .xelis-payment-init-loading svg {
-  width: 1.5rem;
-  height: 1.5rem;
+  min-width: 1.5rem;
+  min-height: 1.5rem;
+  max-width: 1.5rem;
+  max-height: 1.5rem;
 }
 
 .xelis-payment-loading-icon {
-  width: 1.5rem;
-  height: 1.5rem;
+  min-width: 1.5rem;
+  min-height: 1.5rem;
+  max-width: 1.5rem;
+  max-height: 1.5rem;
   animation: rotate-loading-icon 1s infinite;
 }
 
@@ -170,12 +186,48 @@
 }
 
 .xelis-payment-highlight svg {
-  width: 1.5rem;
-  height: 1.5rem;
+  min-width: 1.5rem;
+  min-height: 1.5rem;
+  max-width: 1.5rem;
+  max-height: 1.5rem;
 }
 
-.xelis-payment-devider {
+.xelis-payment-divider {
   height: .25rem;
   width: 100%;
   background-color: black;
+}
+
+.xelis-payment-message-error {
+  display: flex;
+  gap: 1rem;
+}
+
+.xelis-payment-message-error> :nth-child(2) {
+  color: red;
+}
+
+.xelis-payment-message-error svg {
+  min-width: 2rem;
+  min-height: 2rem;
+  max-width: 2rem;
+  max-height: 2rem;
+  color: red;
+}
+
+.xelis-payment-message-success {
+  display: flex;
+  gap: 1rem;
+}
+
+.xelis-payment-message-success> :nth-child(2) {
+  color: green;
+}
+
+.xelis-payment-message-success svg {
+  min-width: 2rem;
+  min-height: 2rem;
+  max-width: 2rem;
+  max-height: 2rem;
+  color: green;
 }
