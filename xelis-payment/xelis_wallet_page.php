@@ -226,6 +226,7 @@ function render_page()
             <?php endforeach; ?>
           <?php endif; ?>
         <?php endforeach; ?>
+        <!-- TODO: display for coinbase and burn -->
       </table>
     <?php else: ?>
       <p>No transactions.</p>

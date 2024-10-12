@@ -9,12 +9,6 @@ class Xelis_Rest
       'callback' => [$this, 'route_payment_state'],
       'permission_callback' => '__return_true',
     ));
-
-    register_rest_route('xelis_payment', 'try_expire_refund', array(
-      'methods' => 'GET',
-      'callback' => [$this, 'route_try_expire_refund'],
-      'permission_callback' => '__return_true',
-    ));
   }
 
   function route_payment_state($request)
@@ -73,14 +67,5 @@ class Xelis_Rest
 
     $state = $xelis_state->get_payment_state();
     return new WP_REST_Response($state, 200);
-  }
-
-  function route_try_expire_refund($request)
-  {
-    $xelis_state = new Xelis_Payment_State();
-    $state = $xelis_state->get_payment_state();
-    if ($state->status === Xelis_Payment_Status::EXPIRED) {
-
-    }
   }
 }

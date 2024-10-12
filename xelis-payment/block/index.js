@@ -63,10 +63,6 @@ const Content = (props) => {
     }
   }, []);
 
-  const check_transaction = useCallback(() => {
-
-  }, []);
-
   const copy = useCallback(() => {
     navigator.clipboard.writeText(payment_state.addr);
     window.alert(`The integrated address was copied.`);
@@ -181,7 +177,7 @@ const Content = (props) => {
             Did you sent a transaction before the window expired?
             Do not reset the checkout and try to click the button below to check for the transaction and issue a refund.
           </div>,
-          <button type="button" onClick={check_transaction} className="xelis-payment-button">
+          <button type="button" onClick={init_payment_state} className="xelis-payment-button">
             <Icons.Transaction />
             Check transaction
           </button>
