@@ -83,7 +83,10 @@ function render_page()
     }
 
     if (isset($_POST["rescan"])) {
-
+      try {
+        $xelis_wallet->rescan();
+      } catch (Exception $e) {
+      }
     }
   }
 

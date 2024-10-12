@@ -114,6 +114,10 @@ class Xelis_Wallet
     return $this->fetch("is_online");
   }
 
+  public function rescan() {
+    return $this->fetch("rescan");
+  }
+
   public function set_online_mode(string $endpoint)
   {
     return $this->fetch("set_online_mode", [
