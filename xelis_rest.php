@@ -18,8 +18,12 @@ class Xelis_Rest
     $gateway = new Xelis_Payment_Gateway();
     $timeout = (int) $gateway->payment_timeout * 60; // payment_timeout in min so we multiply by 60 for timeout in seconds
 
-    if (!$xelis_wallet->is_online()) {
-      return new WP_REST_Response('The node is not online.', 400);
+    try {
+      if (!$xelis_wallet->is_online()) {
+        return new WP_REST_Response('The node is not online.', 400);
+      }
+    } catch (Exception $e) {
+      return new WP_REST_Response($e->getMessage(), 400);
     }
 
     // don't initiate payment window if disabled

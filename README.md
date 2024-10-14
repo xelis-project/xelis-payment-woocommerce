@@ -1,6 +1,6 @@
-# XELIS Woocommerce plugin - WIP
+# XELIS Woocommerce plugin
 
-Accept XELIS as a means of payment for the popular WordPress eCommerce platform.
+Accept XELIS as a means of payment for the most popular WordPress eCommerce platform.
 
 ## How it works
 
