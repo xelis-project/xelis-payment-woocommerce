@@ -53,8 +53,7 @@ class Xelis_Payment_Method extends AbstractPaymentMethodType
 
   public function get_payment_method_data()
   {
-    //$xelis_state = new Xelis_Payment_State();
-    //$xelis_state->process_payment_state();
+    // $xelis_state = new Xelis_Payment_State();
     // $state = $xelis_state->get_payment_state();
 
     return [
@@ -62,7 +61,7 @@ class Xelis_Payment_Method extends AbstractPaymentMethodType
       'description' => $this->get_setting('description'),
       'network' => $this->get_setting('network'),
       'supports' => $this->get_supported_features(),
-      //'payment_state' => $state
+      // 'payment_state' => $state
     ];
   }
 }

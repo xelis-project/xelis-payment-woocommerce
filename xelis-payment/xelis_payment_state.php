@@ -105,6 +105,9 @@ class Xelis_Payment_State
     return WC()->session->set("payment_state", null);
   }
 
+  // PHP requests are locked by session file so we don't have to create a standalone process to run this function and avoid race condition
+  // https://www.php.net/manual/en/features.session.security.management.php#features.session.security.management.session-locking
+  // calling the route /?rest_route=/xelis_payment/init_payment should wait every session request
   public function process_payment_state()
   {
     $state = $this->get_payment_state();
@@ -115,7 +118,6 @@ class Xelis_Payment_State
     if ($state->status === Xelis_Payment_Status::WAITING) {
       if ($state->expiration < time()) {
         $state->status = Xelis_Payment_Status::EXPIRED;
-        $this->set_payment_state($state);
       }
 
       $gateway = new Xelis_Payment_Gateway();

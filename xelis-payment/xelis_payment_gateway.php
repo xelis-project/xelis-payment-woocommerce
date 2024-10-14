@@ -34,10 +34,10 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
 
     $this->init_form_fields();
 
-    global $initialized;
-    if (!$initialized) { // make sure we don't add multiple action by init new Xelis_Payment_Gateway() - we don't use singleton
+    global $xelis_payment_gateway_initialized;
+    if (!$xelis_payment_gateway_initialized) { // make sure we don't add multiple action by init new Xelis_Payment_Gateway() - we don't use singleton
       add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
-      $initialized = true;
+      $xelis_payment_gateway_initialized = true;
     }
   }
 
@@ -256,7 +256,6 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
   public function process_payment($order_id)
   {
     $xelis_state = new Xelis_Payment_State();
-    //$xelis_state->process_payment_state(); // this is call periodically from js it updates the state of payment_data - we call it again just to be sure
     $state = $xelis_state->get_payment_state();
 
     if ($state->status !== Xelis_Payment_Status::PROCESSED) {
