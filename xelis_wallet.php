@@ -249,7 +249,12 @@ class Xelis_Wallet
 
   public function get_output()
   {
-    $lines = file(__DIR__ . '/wallet_output.log', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    $wallet_log_file = __DIR__ . '/wallet_output.log';
+    if (!file_exists($wallet_log_file)) {
+      return [];
+    }
+
+    $lines = file($wallet_log_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     for ($i = 0; $i < count($lines); $i++) {
       $lines[$i] = trim($this->remove_ansi_color_codes($lines[$i]));
     }
@@ -259,7 +264,12 @@ class Xelis_Wallet
 
   public function get_last_output()
   {
-    $file = new SplFileObject(__DIR__ . '/wallet_output.log');
+    $wallet_log_file = __DIR__ . '/wallet_output.log';
+    if (!file_exists($wallet_log_file)) {
+      return "";
+    }
+
+    $file = new SplFileObject($wallet_log_file);
     $file->seek(PHP_INT_MAX);
     $file->seek(max($file->key() - 1, 0));
     $last_line = $file->current();

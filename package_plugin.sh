@@ -23,6 +23,7 @@ PATHS=(
 
 OUTPUT="xelis_payment.zip"
 
+rm $OUTPUT
 zip -r "$OUTPUT" "${PATHS[@]}"
 
 echo "Package created!"
