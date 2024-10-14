@@ -172,7 +172,7 @@ class Xelis_Payment_State
               try {
                 $refund_tx = $xelis_wallet->redirect_xelis_funds($transfer->amount, $from);
               } catch (Exception $e) {
-                error_log('Error sending funds: ' . $e->getMessage());
+                error_log('Error sending funds 1: ' . $e->getMessage());
                 break 2;
               }
 
@@ -197,7 +197,7 @@ class Xelis_Payment_State
                 // this branch can also hit if the payment window is expired :)
                 $refund_tx = $xelis_wallet->redirect_xelis_funds($transfer->amount, $from);
               } catch (Exception $e) {
-                error_log('Error sending funds: ' . $e->getMessage());
+                error_log('Error sending funds 2: ' . $e->getMessage());
                 break 2;
               }
 
@@ -231,7 +231,7 @@ class Xelis_Payment_State
                 $redirect_tx = $xelis_wallet->redirect_xelis_funds($transfer->amount, $owner_wallet_addr);
                 $state->redirect_tx = $redirect_tx->hash;
               } catch (Exception $e) {
-                error_log('Error sending funds: ' . $e->getMessage());
+                error_log('Error sending funds 3: ' . $e->getMessage());
                 break 2;
               }
             }

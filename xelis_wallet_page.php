@@ -21,12 +21,18 @@ function xelis_wallet_menu()
 function render_page()
 {
   $xelis_wallet = new Xelis_Wallet();
-  $balance_atomic = $xelis_wallet->get_balance();
-  $balance = $xelis_wallet->shift_xel($balance_atomic);
-  $addr = $xelis_wallet->get_address();
-  $logs = $xelis_wallet->get_output();
-  $status = $xelis_wallet->get_status();
-  $is_online = $xelis_wallet->is_online();
+
+  try {
+    $balance_atomic = $xelis_wallet->get_balance();
+    $balance = $xelis_wallet->shift_xel($balance_atomic);
+    $addr = $xelis_wallet->get_address();
+    $logs = $xelis_wallet->get_output();
+    $status = $xelis_wallet->get_status();
+    $is_online = $xelis_wallet->is_online();
+  } catch (Exception $e) {
+    $err_msg = $e->getMessage();
+  }
+
   $xelis_gateway = new Xelis_Payment_Gateway();
 
   $filter_address = null;
@@ -45,9 +51,9 @@ function render_page()
       try {
         $amount_atomic = $xelis_wallet->unshift_xel($amount);
         $tx = $xelis_wallet->send_funds($amount_atomic, $asset, $destination);
-        $send_funds_msg = $amount . " sent to " . $destination . " - " . $tx->hash;
+        $success_msg = $amount . " sent to " . $destination . " - " . $tx->hash;
       } catch (Exception $e) {
-        $send_funds_err_msg = $e->getMessage();
+        $err_msg = $e->getMessage();
       }
     }
 
@@ -84,19 +90,25 @@ function render_page()
           $accept_burn = true;
           break;
       }
+
+      $success_msg = "Transaction filter applied";
     }
 
     if (isset($_POST["rescan"])) {
       try {
         $xelis_wallet->rescan();
+        $success_msg = "Rescan started";
       } catch (Exception $e) {
+        $err_msg = $e->getMessage();
       }
     }
 
     if (isset($_POST["reconnect"])) {
       try {
         $xelis_wallet->set_online_mode($xelis_gateway->node_endpoint);
+        $success_msg = "Wallet is now online";
       } catch (Exception $e) {
+        $err_msg = $e->getMessage();
       }
     }
   }
@@ -140,6 +152,20 @@ function render_page()
   </style>
   <div class="wrap">
     <h1><?php esc_html_e('XELIS Wallet', 'xelis_payment'); ?></h1>
+    <?php
+    if (isset($success_msg)) {
+      echo '<div style="color: green;">';
+      echo esc_html($success_msg);
+      echo '</div>';
+    }
+    ?>
+    <?php
+    if (isset($err_msg)) {
+      echo '<div style="color: red;">';
+      echo esc_html($err_msg);
+      echo '</div>';
+    }
+    ?>
     <h2>Config</h2>
     <div class="config">
       <div>Status: <?php echo $status ?></div>
@@ -176,20 +202,6 @@ function render_page()
       <br><br>
       <input type="submit" name="send_funds" value="Submit">
     </form>
-    <?php
-    if (isset($send_funds_msg)) {
-      echo '<div style="color: green;">';
-      echo esc_html($send_funds_msg);
-      echo '</div>';
-    }
-    ?>
-    <?php
-    if (isset($send_funds_err_msg)) {
-      echo '<div style="color: red;">';
-      echo esc_html($send_funds_err_msg);
-      echo '</div>';
-    }
-    ?>
     <h2>Transactions</h2>
     <div>
       <form method="post" action="">
