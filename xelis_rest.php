@@ -20,7 +20,7 @@ class Xelis_Rest
 
     try {
       if (!$xelis_wallet->is_online()) {
-        return new WP_REST_Response('The node is not online.', 400);
+        return new WP_REST_Response('The node is offline.', 400);
       }
     } catch (Exception $e) {
       return new WP_REST_Response($e->getMessage(), 400);

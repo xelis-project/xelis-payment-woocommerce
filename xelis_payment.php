@@ -1,13 +1,13 @@
 <?php
 
-require __DIR__ . '/xelis_payment_state.php';
 require __DIR__ . '/xelis_rest.php';
 require __DIR__ . '/xelis_package.php';
 require __DIR__ . '/xelis_node.php';
 require __DIR__ . '/xelis_wallet.php';
+require __DIR__ . '/xelis_data.php';
+require __DIR__ . '/xelis_payment_state.php';
 require __DIR__ . '/xelis_payment_gateway.php';
 require __DIR__ . '/xelis_payment_method.php';
-require __DIR__ . '/xelis_data.php';
 require __DIR__ . '/xelis_wallet_page.php';
 
 /**

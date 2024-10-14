@@ -55,6 +55,18 @@ class Xelis_Payment_State
     $cart_hash = WC()->cart->get_cart_hash();
     $customer_id = WC()->session->get_customer_id();
     $payment_hash = $customer_id . ":" . $cart_hash;
+    $gateway = new Xelis_Payment_Gateway();
+    $xelis_node = new Xelis_Node($gateway->node_endpoint);
+
+    try {
+      if (!$xelis_node->is_node_responsive()) {
+        throw new Exception("Looks like the XELIS node is unresponsive");
+      }
+    } catch (Exception $e) {
+      error_log(message: 'Error in init_payment_state: ' . $e->getMessage());
+      throw new Exception($e->getMessage());
+    }
+
     $xelis_wallet = new Xelis_Wallet();
 
     try {
@@ -62,7 +74,7 @@ class Xelis_Payment_State
       $start_topoheight = $xelis_wallet->get_topoheight();
     } catch (Exception $e) {
       error_log(message: 'Error in init_payment_state: ' . $e->getMessage());
-      throw new Exception("Can't initiate XELIS payment gateway");
+      throw new Exception($e->getMessage());
     }
 
     $xelis_data = new Xelis_Data();
@@ -70,7 +82,7 @@ class Xelis_Payment_State
       $xel = $xelis_data->convert_usd_to_xel($total);
     } catch (Exception $e) {
       error_log('Error in init_payment_state: ' . $e->getMessage());
-      throw new Exception("Can't initiate XELIS payment gateway");
+      throw new Exception($e->getMessage());
     }
 
     $expiration = time() + $timeout;

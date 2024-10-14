@@ -168,8 +168,8 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
       }
 
       try {
-        $node = new Xelis_Node($node_endpoint);
-        $node->get_version(); // check if you can fetch the endpoint and its valid
+        $xelis_node = new Xelis_Node($node_endpoint);
+        $xelis_node->get_version(); // check if you can fetch the endpoint and its valid
 
         $xelis_wallet = new Xelis_Wallet();
         // set offline or set_online_mode won't assign new endpoint if connected
@@ -189,8 +189,8 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
     if ($wallet_addr !== $this->wallet_addr) {
       try {
         if ($wallet_addr !== "") { // possible to set wallet_addr back to empty
-          $node = new Xelis_Node($this->node_endpoint);
-          $result = $node->validate_address($wallet_addr);
+          $xelis_node = new Xelis_Node($this->node_endpoint);
+          $result = $xelis_node->validate_address($wallet_addr);
           if ($result->is_valid !== true) {
             $this->add_error(json_encode($result));
             $this->add_error("Not a valid XELIS wallet address.");
