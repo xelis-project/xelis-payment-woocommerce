@@ -1,36 +1,33 @@
-# XELIS Woocommerce plugin
+# XELIS WooCommerce plugin
 
 Accept XELIS as a means of payment for the most popular WordPress eCommerce platform.
+This plugin is designed to be simple to integrate for store owner and seamless to use for customers.
 
-## How it works
+## Are you a store owner?
 
-The plugin should be easy to integrate for store owner and seamless to use for client.
+You want to integrate the XELIS payment plugin into your store?
+[Check out the User Manual](/user_manual/store_owner_user_manual.md)
 
-## Store owner
+## Are you a customer?
 
-1. The store owner download the plugin from this repo releases and manually use the `add plugin in wordpress`.
-2. The store owner activate the plugin and wait for things to load.
-3. The store owner goes to settings and add the address of his wallet.
-4. The store owner enable the payment.
+You are having trouble using the plugin or you want to understand how it works before proceeding?
+[Check out the User Manual](/user_manual/customer_user_manual.md)
 
-- The plugin automatically download & install xelis package (wallet) based on his operating system.
-- The plugin run a hot wallet in the background as a proxy (check if the wallet is already running, generate precomputed table and start rpc server to access wallet api).
+## Customer payment process
 
-### Refund
+Initiating
 
-TODO
+1. At checkout the customer goes to the payment options and select 'XELIS Payment' (if available for the items in his cart - configurable).
+2. The plugin will request the USD/XEL quote and initiate a 30min payment window (configurable).
+3. During that time the customer can send funds to the integrated address displayed on screen.
+4. He must also send the exact amount of XEL specified for the order and wait for the payment response.
 
-## Clients / buyers
+Payment Response
 
-1. The client add products in the cart and goes to checkout.
-2. The client choose `Xelis Payment` from the selection list.
-3. The client click `Request address and amount`.
+- The transaction is valid/confirmed and the order is complete.
+- The amount is not exact and an automatic refund is issued.
+- The transaction is not a valid XELIS asset (no refund is issued and the customer can contact store support to resolve the situation).
+- The payment window expiresm, and if the a transaction is found, the plugin will issue a refund (a button is also available for the customer to check for past unconfirmed transaction).
+- If there are any network errors during that process, errors are logged for the store owner to help fix the situation (the payment window is not reset and retries for the entire time of the payment window).
 
-- The plugin fetch xelis/us exchange rate from stats.xelis.io and determine the amount to send in XEL.
-- The plugin generate an integrated address with the order_id to receive funds.
-- The integrated address and amount in XEL is shown to the user with also a QR code.
-- The plugin shows a loading icon waiting for payment and also displays an input box for manual verification.
-- The user send funds to the address and wait for verification. If nothing happens, the user can input the transaction id for manual verification.
-- The interface shows success and redirect to the order completed page.
-- The plugin update database tables (order, payment status and product stocking).
-- The plugin create a transaction to transfer funds from the hot wallet to the store owner wallet.
+![XELIS Payment customer flow chart](xelis_payment_customer_flow_chart.png)
