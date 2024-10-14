@@ -54,7 +54,7 @@ class Xelis_Payment_State
     $total = WC()->cart->total;
     $cart_hash = WC()->cart->get_cart_hash();
     $customer_id = WC()->session->get_customer_id();
-    $payment_hash = $customer_id . ":" . $cart_hash;
+    $payment_hash = time() . ":" . $customer_id . ":" . $cart_hash;
     $gateway = new Xelis_Payment_Gateway();
     $xelis_node = new Xelis_Node($gateway->node_endpoint);
 
