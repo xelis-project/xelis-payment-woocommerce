@@ -23,6 +23,7 @@ function render_page()
   $xelis_wallet = new Xelis_Wallet();
   $balance_atomic = $xelis_wallet->get_balance();
   $balance = $xelis_wallet->shift_xel($balance_atomic);
+  $addr = $xelis_wallet->get_address();
   $logs = $xelis_wallet->get_output();
   $status = $xelis_wallet->get_status();
   $is_online = $xelis_wallet->is_online();
@@ -145,6 +146,8 @@ function render_page()
       <div>Enabled: <?php echo $xelis_gateway->enabled ?></div>
       <div>Network: <?php echo $xelis_gateway->network ?></div>
       <div>Node endpoint: <?php echo $xelis_gateway->node_endpoint ?></div>
+      <div>Redirect wallet address: <?php echo $xelis_gateway->wallet_addr ? $xelis_gateway->wallet_addr : 'not set' ?>
+      </div>
     </div>
     <?php if (!$is_online): ?>
       <br>
@@ -156,6 +159,8 @@ function render_page()
     <div>
       <a href="/wp-admin/admin.php?page=wc-settings&tab=checkout&section=xelis_payment">Go to XELIS Payment settings</a>
     </div>
+    <h2>Address</h2>
+    <div style="font-size: 1.2rem;"><?php echo $addr ?></div>
     <h2>Balance</h2>
     <div style="font-size: 1.2rem;"><?php echo $balance ?> XEL</div>
     <h2>Send funds</h2>
