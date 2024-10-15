@@ -59,6 +59,7 @@ function render_page()
 
     if (isset($_POST["filter_transactions"])) {
       $filter_address = $_POST["address"];
+      $filter_txid = $_POST["txid"];
       $filter_type = $_POST["type"];
 
       switch ($filter_type) {
@@ -90,8 +91,6 @@ function render_page()
           $accept_burn = true;
           break;
       }
-
-      $success_msg = "Transaction filter applied";
     }
 
     if (isset($_POST["rescan"])) {
@@ -114,23 +113,117 @@ function render_page()
   }
 
   try {
-    $txs = $xelis_wallet->get_transactions(
-      0,
-      $accept_incoming,
-      $accept_outgoing,
-      $accept_coinbase,
-      $accept_burn,
-      $filter_address
-    );
+    if ($filter_txid) {
+      $tx = $xelis_wallet->get_transaction($filter_txid);
+      if ($tx) {
+        $txs = [$tx];
+      }
+    } else {
+      $txs = $xelis_wallet->get_transactions(
+        0,
+        $accept_incoming,
+        $accept_outgoing,
+        $accept_coinbase,
+        $accept_burn,
+        $filter_address
+      );
+    }
   } catch (Exception $e) {
+    $err_msg = $e->getMessage();
   }
 
   ?>
   <style>
+    h2 {
+      font-weight: normal;
+      font-size: 1.5rem;
+    }
+
+    h2:after {
+      display: block;
+      content: '';
+      width: 100%;
+      height: .1rem;
+      background-color: #cfcfcf;
+      margin-top: 1rem;
+    }
+
+    .xelis-wallet-body {
+      margin: 2rem 1rem;
+    }
+
+    .xelis-wallet-overview {
+      background-color: white;
+      padding: 1rem;
+      display: flex;
+      gap: 2rem;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      border: .1rem solid #cfcfcf;
+    }
+
+    .xelis-wallet-overview>div> :nth-child(1) {
+      font-size: 1.1rem;
+      margin-bottom: .5rem;
+      font-weight: 500;
+    }
+
+    .xelis-wallet-overview>div> :nth-child(2) {
+      font-size: 1rem;
+      word-break: break-all;
+    }
+
+    .xelis-wallet-addr {
+      background-color: white;
+      border: .1rem solid #cfcfcf;
+      padding: 1rem;
+      font-size: 1.2rem;
+      word-break: break-all;
+    }
+
+    .xelis-wallet-balance {
+      background-color: white;
+      border: .1rem solid #cfcfcf;
+      padding: 1rem;
+      font-size: 1.5rem;
+    }
+
+    .xelis-wallet-send-funds {
+      display: flex;
+      gap: .5rem;
+      align-items: center;
+      background: white;
+      padding: 1rem;
+      flex-wrap: wrap;
+      border: .1rem solid #cfcfcf;
+    }
+
+    .xelis-wallet-send-funds label {
+      font-size: 1rem;
+    }
+
+    .xelis-wallet-filter {
+      background: white;
+      border: .1rem solid #cfcfcf;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .xelis-wallet-filter> :nth-child(1) {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      flex-wrap: wrap;
+    }
+
     table,
     td,
     th {
-      border: .1rem solid;
+      border: .1rem solid #cfcfcf;
       padding: .5rem;
     }
 
@@ -140,17 +233,30 @@ function render_page()
 
     table {
       width: 100%;
+      background: white;
       border-collapse: collapse;
     }
 
-    .config {
-      font-size: 1.2rem;
-      display: flex;
-      flex-direction: column;
-      gap: .25rem;
+    .overflow-table {
+      overflow: auto;
+      width: 100%;
+    }
+
+    .error-msg {
+      color: red;
+      padding: .5rem;
+      font-size: 1rem;
+      border: .1rem solid red;
+    }
+
+    .success-msg {
+      color: green;
+      padding: .5rem;
+      font-size: 1rem;
+      border: .1rem solid green;
     }
   </style>
-  <div class="wrap">
+  <div class="xelis-wallet-body">
     <h1><?php esc_html_e('XELIS Wallet', 'xelis_payment'); ?></h1>
     <?php
     if (isset($success_msg)) {
@@ -161,18 +267,32 @@ function render_page()
     ?>
     <?php
     if (isset($err_msg)) {
-      echo '<div style="color: red;">';
+      echo '<div class="error-msg">';
       echo esc_html($err_msg);
       echo '</div>';
     }
     ?>
-    <h2>Config</h2>
-    <div class="config">
-      <div>Status: <?php echo $status ?></div>
-      <div>Enabled: <?php echo $xelis_gateway->enabled ?></div>
-      <div>Network: <?php echo $xelis_gateway->network ?></div>
-      <div>Node endpoint: <?php echo $xelis_gateway->node_endpoint ?></div>
-      <div>Redirect wallet address: <?php echo $xelis_gateway->wallet_addr ? $xelis_gateway->wallet_addr : 'not set' ?>
+    <h2>Overview</h2>
+    <div class="xelis-wallet-overview">
+      <div>
+        <div>Status</div>
+        <div><?php echo $status ?></div>
+      </div>
+      <div>
+        <div>Enabled</div>
+        <div><?php echo $xelis_gateway->enabled ?></div>
+      </div>
+      <div>
+        <div>Network</div>
+        <div><?php echo $xelis_gateway->network ?></div>
+      </div>
+      <div>
+        <div>Node endpoint</div>
+        <div><?php echo $xelis_gateway->node_endpoint ?></div>
+      </div>
+      <div>
+        <div>Redirect wallet address</div>
+        <div><?php echo $xelis_gateway->wallet_addr ? $xelis_gateway->wallet_addr : 'not set' ?></div>
       </div>
     </div>
     <?php if (!$is_online): ?>
@@ -186,25 +306,29 @@ function render_page()
       <a href="/wp-admin/admin.php?page=wc-settings&tab=checkout&section=xelis_payment">Go to XELIS Payment settings</a>
     </div>
     <h2>Address</h2>
-    <div style="font-size: 1.2rem;"><?php echo $addr ?></div>
+    <div class="xelis-wallet-addr"><?php echo $addr ?></div>
     <h2>Balance</h2>
-    <div style="font-size: 1.2rem;"><?php echo $balance ?> XEL</div>
+    <div class="xelis-wallet-balance"><?php echo $balance ?> XEL</div>
     <h2>Send funds</h2>
-    <form method="post" action="">
-      <label for="amount">Amount:</label><br>
-      <input type="text" id="amount" name="amount" required>
-      <br>
-      <label for="asset">Asset:</label><br>
-      <input type="text" id="asset" value="<?php echo Xelis_Wallet::$XELIS_ASSET ?>" name="asset" required>
-      <br>
-      <label for="destination">Destination:</label><br>
-      <input type="text" id="destination" name="destination" required>
-      <br><br>
+    <form method="post" action="" class="xelis-wallet-send-funds">
+      <div>
+        <label for="amount">Amount:</label>
+        <input type="text" id="amount" name="amount" required>
+      </div>
+      <div>
+        <label for="asset">Asset:</label>
+        <input type="text" id="asset" value="<?php echo Xelis_Wallet::$XELIS_ASSET ?>" name="asset" required>
+      </div>
+      <div>
+        <label for="destination">Destination:</label>
+        <input type="text" id="destination" name="destination" required>
+      </div>
       <input type="submit" name="send_funds" value="Submit">
     </form>
     <h2>Transactions</h2>
-    <div>
+    <div class="xelis-wallet-filter">
       <form method="post" action="">
+        <input type="text" name="txid" value="<?php echo $filter_txid ?>" placeholder="Filter by txid" />
         <input type="text" name="address" value="<?php echo $filter_address ?>" placeholder="Filter by address" />
         <select name="type">
           <option value="all" <?php if ($filter_type === 'all')
@@ -225,59 +349,65 @@ function render_page()
       </form>
     </div>
     <?php if (!empty($txs)): ?>
-      <table>
-        <tr>
-          <th>Tx ID</th>
-          <th>Topoheight</th>
-          <th>Type</th>
-          <th>Transfers</th>
-        </tr>
-        <?php foreach ($txs as $tx): ?>
+      <div class="overflow-table">
+        <table>
           <tr>
-            <td><?php echo esc_html($tx->hash); ?></td>
-            <td><?php echo $tx->topoheight ?></td>
+            <th>Tx ID</th>
+            <th>Topoheight</th>
+            <th>Type</th>
+            <th>Transfers</th>
+          </tr>
+          <?php foreach ($txs as $tx): ?>
+            <tr>
+              <td><?php echo esc_html($tx->hash); ?></td>
+              <td><?php echo $tx->topoheight ?></td>
+              <?php if (isset($tx->incoming)): ?>
+                <td>incoming</td>
+                <td>
+                  <?php echo count($tx->incoming->transfers) ?>
+                </td>
+              <?php endif; ?>
+              <?php if (isset($tx->outgoing)): ?>
+                <td>outgoing</td>
+                <td>
+                  <?php echo count($tx->outgoing->transfers) ?>
+                </td>
+              <?php endif; ?>
+            </tr>
             <?php if (isset($tx->incoming)): ?>
-              <td>incoming</td>
-              <td>
-                <?php echo count($tx->incoming->transfers) ?>
-              </td>
+              <?php foreach ($tx->incoming->transfers as $idx => $transfer): ?>
+                <tr>
+                  <td colspan="4">
+                    <div>
+                      <?php echo $idx + 1 ?>.
+                      Amount: <?php echo esc_html($transfer->amount); ?>
+                      From: <?php echo esc_html($tx->incoming->from); ?>
+                      Extra Data: <?php echo esc_html($transfer->extra_data); ?>
+                      Asset: <?php echo esc_html($transfer->asset); ?>
+                    </div>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
             <?php endif; ?>
             <?php if (isset($tx->outgoing)): ?>
-              <td>outgoing</td>
-              <td>
-                <?php echo count($tx->outgoing->transfers) ?>
-              </td>
+              <?php foreach ($tx->outgoing->transfers as $idx => $transfer): ?>
+                <tr>
+                  <td colspan="4">
+                    <div>
+                      <?php echo $idx + 1 ?>.
+                      Amount: <?php echo esc_html($transfer->amount); ?>
+                      Destination: <?php echo esc_html($transfer->destination); ?>
+                      Extra Data: <?php echo esc_html($transfer->extra_data); ?>
+                      Asset: <?php echo esc_html($transfer->asset); ?>
+                    </div>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
             <?php endif; ?>
-          </tr>
-          <?php if (isset($tx->incoming)): ?>
-            <?php foreach ($tx->incoming->transfers as $idx => $transfer): ?>
-              <tr>
-                <td colspan="4">
-                  <?php echo $idx + 1 ?>.
-                  Amount: <?php echo esc_html($transfer->amount); ?>
-                  From: <?php echo esc_html($tx->incoming->from); ?>
-                  Extra Data: <?php echo esc_html($transfer->extra_data); ?>
-                  Asset: <?php echo esc_html($transfer->asset); ?>
-                </td>
-              </tr>
-            <?php endforeach; ?>
-          <?php endif; ?>
-          <?php if (isset($tx->outgoing)): ?>
-            <?php foreach ($tx->outgoing->transfers as $idx => $transfer): ?>
-              <tr>
-                <td colspan="4">
-                  <?php echo $idx + 1 ?>.
-                  Amount: <?php echo esc_html($transfer->amount); ?>
-                  Destination: <?php echo esc_html($transfer->destination); ?>
-                  Extra Data: <?php echo esc_html($transfer->extra_data); ?>
-                  Asset: <?php echo esc_html($transfer->asset); ?>
-                </td>
-              </tr>
-            <?php endforeach; ?>
-          <?php endif; ?>
-        <?php endforeach; ?>
-        <!-- TODO: display for coinbase and burn -->
-      </table>
+          <?php endforeach; ?>
+          <!-- TODO: display for coinbase and burn -->
+        </table>
+      </div>
     <?php else: ?>
       <p>No transactions.</p>
     <?php endif; ?>
