@@ -74,7 +74,8 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
           'dev' => __('Dev', 'xelis_payment'),
         ),
         'description' => $enabled ? __('Disable the plugin if you want to change the network.', 'xelis_payment') : __('Change XELIS wallet network. You will need to set the node endpoint and wallet address again!', 'xelis_payment'),
-        'disabled' => $enabled
+        'disabled' => $enabled,
+        'default' => 'mainnet',
       ),
       'status' => array(
         'title' => __('Wallet status', 'xelis_payment'),
