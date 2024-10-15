@@ -63,7 +63,7 @@ class Xelis_Payment_State
         throw new Exception("Looks like the XELIS node is unresponsive");
       }
     } catch (Exception $e) {
-      error_log(message: 'Error in init_payment_state: ' . $e->getMessage());
+      error_log('Error in init_payment_state: ' . $e->getMessage());
       throw new Exception($e->getMessage());
     }
 
@@ -73,7 +73,7 @@ class Xelis_Payment_State
       $addr = $xelis_wallet->get_address($payment_hash);
       $start_topoheight = $xelis_wallet->get_topoheight();
     } catch (Exception $e) {
-      error_log(message: 'Error in init_payment_state: ' . $e->getMessage());
+      error_log('Error in init_payment_state: ' . $e->getMessage());
       throw new Exception($e->getMessage());
     }
 

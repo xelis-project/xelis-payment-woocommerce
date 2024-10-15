@@ -20,14 +20,17 @@ if (!defined(constant_name: 'ABSPATH')) {
   exit;
 }
 
-// before anything check if woocommerce plugin is installed
-function missing_woocommerce_notice()
+function echo_err(string $message)
 {
-  echo '<div class="error"><p><strong>' . sprintf(esc_html__('XELIS Payment requires WooCommerce to be installed and active. You can download %s here.', 'xelis_payment'), '<a href="https://woo.com/" target="_blank">WooCommerce</a>') . '</strong></p></div>';
+  add_action('admin_notices', function () use ($message) {
+    echo '<div class="notice notice-error"><p>' . $message . '</p></div>';
+  });
 }
 
+// before anything check if woocommerce plugin is installed
 if (!class_exists('WooCommerce')) {
-  add_action('admin_notices', 'missing_woocommerce_notice');
+  //add_action('admin_notices', 'missing_woocommerce_err_notice');
+  echo_err(sprintf(esc_html__('XELIS Payment requires WooCommerce to be installed and active. You can download %s here.', 'xelis_payment'), '<a href="https://woo.com/" target="_blank">WooCommerce</a>'));
   return;
 }
 
@@ -37,26 +40,31 @@ require_once __DIR__ . '/xelis_payment_method.php';
 // install xelis binaries on activation
 function activate_xelis_plugin()
 {
-  // make sure wallet is not runnning while activating
-  // can happen if we install a new version of the plugin
-  $xelis_wallet = new Xelis_Wallet();
-  $xelis_wallet->close_wallet();
+  try {
+    // make sure wallet is not runnning while activating
+    // can happen if we install a new version of the plugin
+    $xelis_wallet = new Xelis_Wallet();
+    $xelis_wallet->close_wallet();
 
-  $xelis_package = new Xelis_Package();
-  $xelis_package->install_package();
+    $xelis_package = new Xelis_Package();
+    $xelis_package->install_package();
+  } catch (Exception $e) {
+    echo_err($e->getMessage());
+  }
 }
 
 register_activation_hook(__FILE__, 'activate_xelis_plugin');
 
 // make sure wallet is running - start otherwise
-function run_wallet() {
+function run_wallet()
+{
   try {
     $xelis_wallet = new Xelis_Wallet();
     if (!$xelis_wallet->is_running()) {
       $xelis_wallet->start_wallet();
     }
   } catch (Exception $e) {
-    error_log($e->getMessage());
+    echo_err($e->getMessage());
   }
 }
 

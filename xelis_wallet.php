@@ -69,9 +69,6 @@ class Xelis_Wallet
 
   public function redirect_xelis_funds(int $amount, string $destination)
   {
-    $test = $this->get_balance();
-    error_log($test);
-
     $fee = $this->estimate_fees($amount, Xelis_Wallet::$XELIS_ASSET, $destination);
     $amount -= $fee;
     return $this->send_funds($amount, Xelis_Wallet::$XELIS_ASSET, $destination, $fee);
@@ -178,7 +175,7 @@ class Xelis_Wallet
     $response = curl_exec($ch);
 
     if (curl_errno($ch)) {
-      throw new Exception(message: curl_error($ch));
+      throw new Exception(curl_error($ch));
       //echo 'cURL Error: ' . curl_error($ch);
     }
 

@@ -15,7 +15,7 @@ class Xelis_Data
 
     $response = curl_exec($ch);
     if (curl_errno($ch)) {
-      throw new Exception(message: curl_error(handle: $ch));
+      throw new Exception( curl_error(handle: $ch));
     }
 
     curl_close($ch);
@@ -29,7 +29,7 @@ class Xelis_Data
       }
     }
 
-    throw new Exception(message:"can't parse price from response");
+    throw new Exception("can't parse price from response");
   }
 
   public function convert_usd_to_xel(float $usd): float

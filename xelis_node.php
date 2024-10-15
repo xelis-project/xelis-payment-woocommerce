@@ -19,10 +19,11 @@ class Xelis_Node
     return $this->fetch("get_top_block");
   }
 
-  public function is_node_responsive() {
+  public function is_node_responsive()
+  {
     $top_block = $this->get_top_block();
     // consider having blockchain or node issues if no new block appears after a generous 5min (XELIS is 15s block time)
-    $block_time = (int)($top_block->timestamp / 1000);
+    $block_time = (int) ($top_block->timestamp / 1000);
     return $block_time + 300 > time();
   }
 
@@ -58,7 +59,7 @@ class Xelis_Node
     $response = curl_exec($ch);
 
     if (curl_errno($ch)) {
-      throw new Exception(message: curl_error(handle: $ch));
+      throw new Exception(curl_error(handle: $ch));
     }
 
     curl_close($ch);
