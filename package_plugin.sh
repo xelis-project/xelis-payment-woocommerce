@@ -1,3 +1,4 @@
+#!/bin/bash
 cd block
 
 npm run build
@@ -20,6 +21,10 @@ PATHS=(
   "./block/require.js"
   "./assets"
 )
+
+if [ "$1" == "include-tables" ]; then
+  PATHS+=("./precomputed_tables")
+fi
 
 OUTPUT="xelis_payment.zip"
 
