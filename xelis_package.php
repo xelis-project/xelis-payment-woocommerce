@@ -55,7 +55,10 @@ class Xelis_Package
       throw new Exception(json_encode(error_get_last()));
     }
 
-    file_put_contents($xelis_zip_file, $pkg_content);
+    $pgk_stored = file_put_contents($xelis_zip_file, $pkg_content);
+    if ($pgk_stored === false) {
+      throw new Exception(json_encode(error_get_last()));
+    }
 
     $extension = pathinfo($xelis_zip_url, PATHINFO_EXTENSION);
 
@@ -66,7 +69,7 @@ class Xelis_Package
           throw new Exception('Failed to extract XELIS package.');
         }
 
-        // TODO strip first folder like --strip-components=1 in tar
+        // TODO: strip first folder like --strip-components=1 in tar
 
         $zip->close();
       } else {
@@ -76,7 +79,12 @@ class Xelis_Package
       // --strip-components=1 is used to remove subfolder inside the zip
       $command = "tar -xzvf " . escapeshellarg($xelis_zip_file) . " --strip-components=1 -C " . escapeshellarg($xelis_folder);
       //throw new Exception($command);
-      exec($command);
+      $output = [];
+      $return_var = 0;
+      exec($command . ' 2>&1', $output, $return_var); // use 2>&1 to redirect error to $output
+      if ($return_var !== 0) {
+        throw new Exception(json_encode($output));
+      }
     } else {
       throw new Exception('Unknown extension package.');
     }
