@@ -23,10 +23,10 @@ function render_page()
   $xelis_wallet = new Xelis_Wallet();
 
   try {
+    $logs = $xelis_wallet->get_output();
     $balance_atomic = $xelis_wallet->get_balance();
     $balance = $xelis_wallet->shift_xel($balance_atomic);
     $addr = $xelis_wallet->get_address();
-    $logs = $xelis_wallet->get_output();
     $status = $xelis_wallet->get_status();
     $is_online = $xelis_wallet->is_online();
   } catch (Exception $e) {
