@@ -59,8 +59,8 @@ class Xelis_Payment_State
     $xelis_node = new Xelis_Node($gateway->node_endpoint);
 
     try {
-      if (!$xelis_node->is_node_responsive()) {
-        throw new Exception("Looks like the XELIS node is unresponsive");
+      if ($xelis_node->has_node_deviated_too_much()) {
+        throw new Exception("Looks like the XELIS node has deviated too much. We will avoid requesting payment until resolved.");
       }
     } catch (Exception $e) {
       error_log('Error in init_payment_state: ' . $e->getMessage());

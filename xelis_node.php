@@ -19,12 +19,12 @@ class Xelis_Node
     return $this->fetch("get_top_block");
   }
 
-  public function is_node_responsive()
+  public function has_node_deviated_too_much()
   {
     $top_block = $this->get_top_block();
-    // consider having blockchain or node issues if no new block appears after a generous 5min (XELIS is 15s block time)
+    // consider having blockchain or node issues if no recent blocks appears after a generous 5min (XELIS is 15s block time)
     $block_time = (int) ($top_block->timestamp / 1000);
-    return $block_time + 300 > time();
+    return time() > $block_time + 300;
   }
 
   public function validate_address(string $addr)
