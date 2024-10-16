@@ -253,7 +253,7 @@ class Xelis_Wallet
 
     $lines = file($wallet_log_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     for ($i = 0; $i < count($lines); $i++) {
-      $lines[$i] = trim($this->remove_ansi_color_codes($lines[$i]));
+      $lines[$i] = trim($lines[$i]);
     }
 
     return $lines;
@@ -270,17 +270,11 @@ class Xelis_Wallet
     $file->seek(PHP_INT_MAX);
     $file->seek(max($file->key() - 1, 0));
     $last_line = $file->current();
-    return trim($this->remove_ansi_color_codes($last_line));
+    return trim($last_line);
   }
 
-  public function remove_ansi_color_codes($string)
+  public function has_executable()
   {
-    $value = preg_replace('/\x1B\[[0-?9;]*m/', '', $string);
-    $value = str_replace('[2K', '', $value);
-    return $value;
-  }
-
-  public function has_executable() {
     $xelis_wallet = __DIR__ . '/xelis_pkg/xelis_wallet';
     return file_exists($xelis_wallet);
   }
@@ -299,7 +293,9 @@ class Xelis_Wallet
       . " --precomputed-tables-path " . __DIR__ . "/precomputed_tables/"
       . " --rpc-bind-address 127.0.0.1:8081 "
       . " --rpc-username admin "
-      . " --rpc-password admin ";
+      . " --rpc-password admin "
+      . " --disable-log-color"
+      . " --disable-interactive-mode";
     //. " --force-stable-balance ";
 
     // https://stackoverflow.com/questions/3819398/php-exec-command-or-similar-to-not-wait-for-result
