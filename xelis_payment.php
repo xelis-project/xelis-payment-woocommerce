@@ -38,7 +38,6 @@ require_once __DIR__ . '/xelis_payment_gateway.php';
 require_once __DIR__ . '/xelis_payment_method.php';
 
 // INIT - make sure wallet is installed and running
-
 $xelis_wallet = new Xelis_Wallet();
 if (!$xelis_wallet->is_running()) {
   if (!$xelis_wallet->has_executable()) {

@@ -50,7 +50,12 @@ class Xelis_Package
     }
 
     $xelis_zip_url = $this->get_package_url();
-    file_put_contents($xelis_zip_file, fopen($xelis_zip_url, 'r'));
+    $pkg_content = fopen($xelis_zip_url, 'r');
+    if ($pkg_content === false) {
+      throw new Exception(json_encode(error_get_last()));
+    }
+
+    file_put_contents($xelis_zip_file, $pkg_content);
 
     $extension = pathinfo($xelis_zip_url, PATHINFO_EXTENSION);
 
