@@ -29,7 +29,7 @@ class Xelis_Data
       }
     }
 
-    throw new Exception("can't parse price from response");
+    throw new Exception("Can't parse price from response.");
   }
 
   public function convert_usd_to_xel(float $usd): float

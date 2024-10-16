@@ -284,7 +284,7 @@ class Xelis_Wallet
   {
     $xelis_wallet = __DIR__ . '/xelis_pkg/xelis_wallet';
     if (!file_exists($xelis_wallet)) {
-      throw new Exception('xelis_wallet does not exists');
+      throw new Exception('The xelis_wallet executable does not exists.');
     }
 
     $gateway = new Xelis_Payment_Gateway();

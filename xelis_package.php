@@ -30,7 +30,7 @@ class Xelis_Package
       }
     }
 
-    throw new Exception("XELIS is not available for your operating system");
+    throw new Exception("XELIS is not available for your operating system.");
   }
 
   public function install_package()
@@ -40,7 +40,7 @@ class Xelis_Package
 
     if (!is_dir($xelis_folder)) {
       if (!mkdir($xelis_folder)) {
-        throw new Exception("failed to create xelis_pkg folder");
+        throw new Exception("Failed to create xelis_pkg folder.");
       }
     }
 
@@ -53,14 +53,14 @@ class Xelis_Package
       $zip = new ZipArchive();
       if ($zip->open($xelis_zip_file) == true) {
         if (!$zip->extractTo($xelis_folder)) {
-          throw new Exception('failed to extract xelis package');
+          throw new Exception('Failed to extract XELIS package.');
         }
 
         // TODO strip first folder like --strip-components=1 in tar
 
         $zip->close();
       } else {
-        throw new Exception('unable to open xelis package');
+        throw new Exception('Unable to open XELIS package.');
       }
     } else if ($extension === 'gz') {
       // --strip-components=1 is used to remove subfolder inside the zip
@@ -68,7 +68,7 @@ class Xelis_Package
       //throw new Exception($command);
       exec($command);
     } else {
-      throw new Exception('unknown extension package');
+      throw new Exception('Unknown extension package.');
     }
   }
 }
