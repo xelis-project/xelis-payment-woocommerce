@@ -6,6 +6,10 @@ class Xelis_Package
 
   public function get_package_url()
   {
+    // temporary solution for smaller precomputed table - the default binaries have 26
+    return "https://github.com/xelis-project/xelis-payment-woocommerce/releases/download/v0.1.0/xelis_wallet_linux.tar.gz";
+
+    /*
     $os = php_uname('s');
     $cpu = php_uname('m');
     //$prefix = 'https://github.com/xelis-project/xelis-blockchain/releases/latest/download/';
@@ -31,6 +35,7 @@ class Xelis_Package
     }
 
     throw new Exception("XELIS is not available for your operating system.");
+    */
   }
 
   public function install_package()

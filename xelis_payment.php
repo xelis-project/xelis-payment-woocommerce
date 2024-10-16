@@ -37,38 +37,27 @@ if (!class_exists('WooCommerce')) {
 require_once __DIR__ . '/xelis_payment_gateway.php';
 require_once __DIR__ . '/xelis_payment_method.php';
 
-// install xelis binaries on activation
-function activate_xelis_plugin()
-{
-  try {
-    // make sure wallet is not runnning while activating
-    // can happen if we install a new version of the plugin
-    $xelis_wallet = new Xelis_Wallet();
-    $xelis_wallet->close_wallet();
+// INIT - make sure wallet is installed and running
 
-    $xelis_package = new Xelis_Package();
-    $xelis_package->install_package();
-  } catch (Exception $e) {
-    echo_err($e->getMessage());
-  }
-}
-
-register_activation_hook(__FILE__, 'activate_xelis_plugin');
-
-// make sure wallet is running - start otherwise
-function run_wallet()
-{
-  try {
-    $xelis_wallet = new Xelis_Wallet();
-    if (!$xelis_wallet->is_running()) {
-      $xelis_wallet->start_wallet();
+$xelis_wallet = new Xelis_Wallet();
+if (!$xelis_wallet->is_running()) {
+  if (!$xelis_wallet->has_executable()) {
+    try {
+      $xelis_package = new Xelis_Package();
+      $xelis_package->install_package();
+    } catch (Exception $e) {
+      echo_err($e->getMessage());
+      return;
     }
+  }
+
+  try {
+    $xelis_wallet->start_wallet();
   } catch (Exception $e) {
     echo_err($e->getMessage());
+    return;
   }
 }
-
-run_wallet();
 
 // add the gateway to WooCommerce payment method
 function add_xelis_payment_gateway($gateways)

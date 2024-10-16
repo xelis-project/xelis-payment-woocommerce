@@ -280,17 +280,18 @@ class Xelis_Wallet
     return $value;
   }
 
+  public function has_executable() {
+    $xelis_wallet = __DIR__ . '/xelis_pkg/xelis_wallet';
+    return file_exists($xelis_wallet);
+  }
+
   public function start_wallet()
   {
-    $xelis_wallet = __DIR__ . '/xelis_pkg/xelis_wallet';
-    if (!file_exists($xelis_wallet)) {
-      throw new Exception('The xelis_wallet executable does not exists.');
-    }
-
+    $xelis_wallet_file = __DIR__ . '/xelis_pkg/xelis_wallet';
     $gateway = new Xelis_Payment_Gateway();
 
     // this is local only we don't care if we set password in clear and as admin
-    $xelis_wallet_cmd = $xelis_wallet
+    $xelis_wallet_cmd = $xelis_wallet_file
       . " --network " . $gateway->network
       . " --daemon-address " . $gateway->node_endpoint
       . " --wallet-path " . __DIR__ . "/wallet/" . $gateway->network
