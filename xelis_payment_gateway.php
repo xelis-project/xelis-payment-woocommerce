@@ -12,6 +12,8 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
 
   public string $whitelist_tags;
 
+  private static $instance = null;
+
   public function __construct()
   {
     $this->id = 'xelis_payment';
@@ -20,8 +22,7 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
     $this->method_title = __('XELIS Payment', 'xelis_payment');
     $this->method_description = __('A XELIS payment gateway for WooCommerce.', 'xelis_payment');
     $this->supports = array('products');
-
-
+    //error_log('Constructor called at: ' . print_r(debug_backtrace(), true));
     $this->init_settings();
 
     $this->title = __('XELIS Payment', 'xelis_payment');
@@ -33,17 +34,19 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
     $this->whitelist_tags = $this->get_option('whitelist_tags', '');
 
     $this->init_form_fields();
+    add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
 
-    global $xelis_payment_gateway_initialized;
-    if (!$xelis_payment_gateway_initialized) { // make sure we don't add multiple action by init new Xelis_Payment_Gateway() - we don't use singleton
-      add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
-      $xelis_payment_gateway_initialized = true;
-    }
+    self::$instance = $this;
   }
 
-  public function get_settings()
+  public static function get_instance()
   {
-    return get_option('woocommerce_' . $this->id . '_settings', []);
+    // __construct is first called by the woocommerce payment gateway so we don't initialized here
+    //if (!isset(self::$instance)) {
+      //self::$instance = new self();
+    //}
+
+    return self::$instance;
   }
 
   public function init_form_fields()

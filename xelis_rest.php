@@ -15,7 +15,7 @@ class Xelis_Rest
   {
     $xelis_wallet = new Xelis_Wallet();
     $xelis_state = new Xelis_Payment_State();
-    $gateway = new Xelis_Payment_Gateway();
+    $gateway = Xelis_Payment_Gateway::get_instance();
     $timeout = (int) $gateway->payment_timeout * 60; // payment_timeout in min so we multiply by 60 for timeout in seconds
 
     try {

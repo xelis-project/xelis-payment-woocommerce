@@ -37,26 +37,44 @@ if (!class_exists('WooCommerce')) {
 require_once __DIR__ . '/xelis_payment_gateway.php';
 require_once __DIR__ . '/xelis_payment_method.php';
 
-// INIT - make sure wallet is installed and running
-$xelis_wallet = new Xelis_Wallet();
-if (!$xelis_wallet->is_running()) {
-  if (!$xelis_wallet->has_executable()) {
+function xelis_payment_activation() {
+  // on activation make sure wallet is installed and running
+  $xelis_wallet = new Xelis_Wallet();
+  if (!$xelis_wallet->is_process_running()) {
+    if (!$xelis_wallet->has_executable()) {
+      try {
+        $xelis_package = new Xelis_Package();
+        $xelis_package->install_package();
+      } catch (Exception $e) {
+        echo_err($e->getMessage());
+        return;
+      }
+    }
+
     try {
-      $xelis_package = new Xelis_Package();
-      $xelis_package->install_package();
+      $xelis_wallet->start_wallet();
     } catch (Exception $e) {
       echo_err($e->getMessage());
       return;
     }
   }
+}
 
+register_activation_hook(__FILE__, 'xelis_payment_activation');
+
+function xelis_payment_deactivation() {
+  // the store owner should deactivate the plugin after disabling it for 30m
+  // avoid pending payments issues
   try {
-    $xelis_wallet->start_wallet();
+    $xelis_wallet = new Xelis_Wallet();
+    $xelis_wallet->close_wallet();
   } catch (Exception $e) {
     echo_err($e->getMessage());
     return;
   }
 }
+
+register_deactivation_hook(__FILE__, 'xelis_payment_deactivation');
 
 // add the gateway to WooCommerce payment method
 function add_xelis_payment_gateway($gateways)

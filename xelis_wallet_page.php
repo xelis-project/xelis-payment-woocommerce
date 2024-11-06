@@ -24,16 +24,18 @@ function render_page()
 
   try {
     $logs = $xelis_wallet->get_output();
+    $status = $xelis_wallet->get_status();
+    $is_running = $xelis_wallet->is_process_running();
+    $is_online = $xelis_wallet->is_online();
+
     $balance_atomic = $xelis_wallet->get_balance();
     $balance = $xelis_wallet->shift_xel($balance_atomic);
     $addr = $xelis_wallet->get_address();
-    $status = $xelis_wallet->get_status();
-    $is_online = $xelis_wallet->is_online();
   } catch (Exception $e) {
     $err_msg = $e->getMessage();
   }
 
-  $xelis_gateway = new Xelis_Payment_Gateway();
+  $xelis_gateway = Xelis_Payment_Gateway::get_instance();
 
   $filter_address = null;
   $accept_incoming = true;
@@ -41,6 +43,8 @@ function render_page()
   $accept_coinbase = true;
   $accept_burn = true;
   $filter_type = 'all';
+  $filter_txid = null;
+  $filter_type = null;
 
   if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_POST["send_funds"])) {
@@ -106,6 +110,15 @@ function render_page()
       try {
         $xelis_wallet->set_online_mode($xelis_gateway->node_endpoint);
         $success_msg = "Wallet is now online";
+      } catch (Exception $e) {
+        $err_msg = $e->getMessage();
+      }
+    }
+
+    if (isset($_POST["restart"])) {
+      try {
+        $xelis_wallet->start_wallet();
+        $success_msg = "Wallet is now running";
       } catch (Exception $e) {
         $err_msg = $e->getMessage();
       }
@@ -298,7 +311,15 @@ function render_page()
     <?php if (!$is_online): ?>
       <br>
       <form method="post" action="">
+        <span>Wallet is offline: </span>
         <input type="submit" name="reconnect" value="Reconnect">
+      </form>
+    <?php endif; ?>
+    <?php if (!$is_running): ?>
+      <br>
+      <form method="post" action="">
+        <span>Wallet is not running: </span>
+        <input type="submit" name="restart" value="Restart">
       </form>
     <?php endif; ?>
     <br>

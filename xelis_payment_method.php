@@ -6,10 +6,11 @@ class Xelis_Payment_Method extends AbstractPaymentMethodType
 {
   protected $name = 'xelis_payment';
 
+  // note: this func is called before Xelis_Payment_Gateway gets initialized
+  // meaning do not call gateway instance
   public function initialize()
   {
-    $gateway = new Xelis_Payment_Gateway();
-    $this->settings = $gateway->get_settings();
+    $this->settings = get_option('woocommerce_' . $this->name . '_settings', []);
   }
 
   public function is_active()

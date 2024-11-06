@@ -55,7 +55,7 @@ class Xelis_Payment_State
     $cart_hash = WC()->cart->get_cart_hash();
     $customer_id = WC()->session->get_customer_id();
     $payment_hash = time() . ":" . $customer_id . ":" . $cart_hash;
-    $gateway = new Xelis_Payment_Gateway();
+    $gateway = Xelis_Payment_Gateway::get_instance();
     $xelis_node = new Xelis_Node($gateway->node_endpoint);
 
     try {
@@ -132,7 +132,7 @@ class Xelis_Payment_State
         $state->status = Xelis_Payment_Status::EXPIRED;
       }
 
-      $gateway = new Xelis_Payment_Gateway();
+      $gateway = Xelis_Payment_Gateway::get_instance();
       $owner_wallet_addr = $gateway->wallet_addr;
 
       $xelis_wallet = new Xelis_Wallet();

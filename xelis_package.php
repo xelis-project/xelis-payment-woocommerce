@@ -78,12 +78,12 @@ class Xelis_Package
     } else if ($extension === 'gz') {
       // --strip-components=1 is used to remove subfolder inside the zip
       $command = "tar -xzvf " . escapeshellarg($xelis_zip_file) . " --strip-components=1 -C " . escapeshellarg($xelis_folder);
-      //throw new Exception($command);
+
       $output = [];
       $return_var = 0;
       exec($command . ' 2>&1', $output, $return_var); // use 2>&1 to redirect error to $output
       if ($return_var !== 0) {
-        throw new Exception(json_encode($output));
+        throw new Exception($return_var . " " . json_encode($output));
       }
     } else {
       throw new Exception('Unknown extension package.');

@@ -4,6 +4,10 @@ class Xelis_Wallet
 {
   public static string $XELIS_ASSET = "0000000000000000000000000000000000000000000000000000000000000000";
 
+  private $wallet_path = __DIR__ . '/xelis_pkg/xelis_wallet';
+  private $wallet_pid_path = __DIR__ . '/xelis_pkg/pid';
+  private $wallet_output_path = __DIR__ . "/wallet_output.log";
+
   public function get_address($integrated_data = null)
   {
     if ($integrated_data) {
@@ -38,6 +42,11 @@ class Xelis_Wallet
   public function get_status(): string
   {
     try {
+      $running = $this->is_process_running();
+      if (!$running) {
+        return "Not running";
+      }
+
       $online = $this->is_online();
       $status = $online ? 'Online' : 'Offline';
       $network = $this->get_network();
@@ -194,6 +203,9 @@ class Xelis_Wallet
     return $data;
   }
 
+  /*
+  // old function to get the wallet pid
+  // using an alternative because pgrep can return an empty list on VPS (restrictive access)
   public function get_wallet_pid(): int|null
   {
     // TODO: windows
@@ -204,6 +216,17 @@ class Xelis_Wallet
     }
 
     return $output[0];
+  }
+  */
+
+  public function get_wallet_pid(): int|null
+  {
+    $pid = file_get_contents($this->wallet_pid_path);
+    if (!$pid) {
+      return null;
+    }
+
+    return intval($pid);
   }
 
   public function shift_xel(int $amount)
@@ -216,12 +239,31 @@ class Xelis_Wallet
     return (int) ($amount * 100000000.0);
   }
 
+  /*
+  // old function to check if wallet is running
+  // you might have restrictive access to /proc on VPS so will use something else to check
   public function is_running(): bool
   {
     $pid = $this->get_wallet_pid();
     if ($pid) {
       // TODO: windows
       return file_exists('/proc/' . $pid);
+    }
+
+    return false;
+  }
+  */
+
+  public function is_process_running(): bool
+  {
+    $pid = $this->get_wallet_pid();
+    if ($pid) {
+      // TODO: windows
+      $output = null;
+      $code = null;
+      // use kill -0 instead of preg has it may be restrictive on VPS env
+      exec("kill -0 " . $pid, $output, $code);
+      return $code === 0;
     }
 
     return false;
@@ -237,7 +279,7 @@ class Xelis_Wallet
         throw new Exception(posix_get_last_error());
       }
 
-      //$this->del_wallet_pid();
+      unlink($this->wallet_pid_path);
       return true;
     }
 
@@ -246,12 +288,11 @@ class Xelis_Wallet
 
   public function get_output()
   {
-    $wallet_log_file = __DIR__ . '/wallet_output.log';
-    if (!file_exists($wallet_log_file)) {
+    if (!file_exists($this->wallet_output_path)) {
       return [];
     }
 
-    $lines = file($wallet_log_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    $lines = file($this->wallet_output_path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     for ($i = 0; $i < count($lines); $i++) {
       $lines[$i] = trim($lines[$i]);
     }
@@ -275,17 +316,15 @@ class Xelis_Wallet
 
   public function has_executable()
   {
-    $xelis_wallet = __DIR__ . '/xelis_pkg/xelis_wallet';
-    return file_exists($xelis_wallet);
+    return file_exists($this->wallet_path);
   }
 
   public function start_wallet()
   {
-    $xelis_wallet_file = __DIR__ . '/xelis_pkg/xelis_wallet';
-    $gateway = new Xelis_Payment_Gateway();
+    $gateway = Xelis_Payment_Gateway::get_instance();
 
     // this is local only we don't care if we set password in clear and as admin
-    $xelis_wallet_cmd = $xelis_wallet_file
+    $xelis_wallet_cmd = $this->wallet_path
       . " --network " . $gateway->network
       . " --daemon-address " . $gateway->node_endpoint
       . " --wallet-path " . __DIR__ . "/wallet/" . $gateway->network
@@ -294,16 +333,20 @@ class Xelis_Wallet
       . " --rpc-bind-address 127.0.0.1:8081 "
       . " --rpc-username admin "
       . " --rpc-password admin "
-      . " --disable-log-color"
-      . " --disable-interactive-mode";
+      . " --disable-log-color "
+      . " --disable-interactive-mode ";
     //. " --force-stable-balance ";
 
     // https://stackoverflow.com/questions/3819398/php-exec-command-or-similar-to-not-wait-for-result
     // TODO: windows
 
-    $wallet_output = __DIR__ . "/wallet_output.log";
+    // nohup -> keeps process running after shell session terminates
+    // setsid -> don't tie process to current shell session
+    // 2>&1 -> redirects stderr to stdout
+    // echo \$1 -> output the process pid
 
-    exec('bash -c "exec nohup setsid ' . $xelis_wallet_cmd . ' > ' . $wallet_output . ' 2>&1 &"');
+    $pid = shell_exec('bash -c "exec nohup setsid ' . $xelis_wallet_cmd . ' > ' . $this->wallet_output_path . ' 2>&1 & echo \$!"');
+    file_put_contents($this->wallet_pid_path, $pid);
     return;
   }
 }
