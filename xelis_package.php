@@ -6,8 +6,11 @@ class Xelis_Package
 
   public function get_package_url()
   {
+    // we store the wallet inside the package for now
+    return "";
+  
     // temporary solution for smaller precomputed table - the default binaries have 26
-    return "https://github.com/xelis-project/xelis-payment-woocommerce/releases/download/v0.1.0/xelis_wallet_linux.tar.gz";
+    //return "https://github.com/xelis-project/xelis-payment-woocommerce/releases/download/v0.1.0/xelis_wallet_linux.tar.gz";
 
     /*
     $os = php_uname('s');
