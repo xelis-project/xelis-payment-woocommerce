@@ -319,11 +319,19 @@ class Xelis_Wallet
     return file_exists($this->wallet_path);
   }
 
+  public function set_wallet_executable()
+  {
+    if (!is_executable($this->wallet_path)) {
+      // no effect on windows because it doesn't use permission system
+      chmod($this->wallet_path, permissions: 755);
+    }
+  }
+
   public function start_wallet()
   {
     $gateway = Xelis_Payment_Gateway::get_instance();
 
-    // this is local only we don't care if we set password in clear and as admin
+    // this is local only we don't care if we set password in clear and is admin/admin
     $xelis_wallet_cmd = $this->wallet_path
       . " --network " . $gateway->network
       . " --daemon-address " . $gateway->node_endpoint
@@ -334,18 +342,21 @@ class Xelis_Wallet
       . " --rpc-username admin "
       . " --rpc-password admin "
       . " --disable-log-color "
-      . " --disable-interactive-mode ";
+      . " --disable-interactive-mode "
+      . " --rpc-threads " . $gateway->wallet_threads
+      . " --precomputed-tables-l1 " . $gateway->precomputed_tables_size;
     //. " --force-stable-balance ";
 
     // https://stackoverflow.com/questions/3819398/php-exec-command-or-similar-to-not-wait-for-result
     // TODO: windows
 
+    // TOKIO_WORKER_THREADS -> set the tokio env var for max nbr of threads
     // nohup -> keeps process running after shell session terminates
     // setsid -> don't tie process to current shell session
     // 2>&1 -> redirects stderr to stdout
     // echo \$1 -> output the process pid
 
-    $pid = shell_exec('bash -c "exec nohup setsid ' . $xelis_wallet_cmd . ' > ' . $this->wallet_output_path . ' 2>&1 & echo \$!"');
+    $pid = shell_exec('bash -c "TOKIO_WORKER_THREADS=' . $gateway->wallet_threads . ' exec nohup setsid ' . $xelis_wallet_cmd . ' > ' . $this->wallet_output_path . ' 2>&1 & echo \$!"');
     file_put_contents($this->wallet_pid_path, $pid);
     return;
   }

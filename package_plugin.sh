@@ -26,6 +26,11 @@ if [ "$1" == "include-tables" ]; then
   PATHS+=("./precomputed_tables")
 fi
 
+if [ "$1" == "include-wallet" ]; then
+  PATHS+=("./xelis_pkg")
+fi
+
+
 OUTPUT="xelis_payment.zip"
 
 rm $OUTPUT

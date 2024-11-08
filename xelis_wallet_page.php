@@ -142,7 +142,7 @@ function render_page()
       );
     }
   } catch (Exception $e) {
-    $err_msg = $e->getMessage();
+    $err_msg = "get_transactions: " . $e->getMessage();
   }
 
   ?>

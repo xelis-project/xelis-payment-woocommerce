@@ -12,6 +12,10 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
 
   public string $whitelist_tags;
 
+  public string $wallet_threads;
+
+  public string $precomputed_tables_size;
+
   private static $instance = null;
 
   public function __construct()
@@ -32,6 +36,8 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
     $this->payment_timeout = $this->get_option('payment_timeout', '30');
     $this->node_endpoint = $this->get_option('node_endpoint', 'https://node.xelis.io');
     $this->whitelist_tags = $this->get_option('whitelist_tags', '');
+    $this->wallet_threads = $this->get_option('wallet_threads', '4');
+    $this->precomputed_tables_size = $this->get_option('precomputed_tables_size', '13');
 
     $this->init_form_fields();
     add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
@@ -116,6 +122,18 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
         'description' => __('Set product tags to accepts XELIS payment. Seperated with commas, for example: accept xelis, xelis, crypto. Leaving blank means that all products can be bought with XEL.', 'xelis_payment'),
         'default' => '',
       ),
+      'wallet_threads' => array(
+        'title' => __('Wallet threads', 'xelis_payment'),
+        'type' => 'text',
+        'description' => __('Maximum number of threads the wallet process will use. By default, it is set low (4) for VPS.', 'xelis_payment'),
+        'default' => '4',
+      ),
+      'precomputed_tables_size' => array(
+        'title' => __('Precomputed tables', 'xelis_payment'),
+        'type' => 'text',
+        'description' => __('Set the ECDLP Tables L1 size . By default, it is set to 13 for lower memory usage (low = 13, medium = 18, full = 26).', 'xelis_payment'),
+        'default' => '13'
+      )
     );
   }
 
@@ -161,6 +179,9 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
         $this->display_errors();
         return false;
       }
+    } else {
+      // if a field is disabled it's not included in the $_POST so we add the current value again here
+      $_POST['woocommerce_' . $this->id . '_network'] = $this->network;
     }
 
     $node_endpoint = $_POST['woocommerce_' . $this->id . '_node_endpoint'];

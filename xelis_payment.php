@@ -42,21 +42,12 @@ function xelis_payment_activation() {
   $xelis_wallet = new Xelis_Wallet();
   if (!$xelis_wallet->is_process_running()) {
     if (!$xelis_wallet->has_executable()) {
-      try {
         $xelis_package = new Xelis_Package();
         $xelis_package->install_package();
-      } catch (Exception $e) {
-        echo_err($e->getMessage());
-        return;
-      }
     }
 
-    try {
-      $xelis_wallet->start_wallet();
-    } catch (Exception $e) {
-      echo_err($e->getMessage());
-      return;
-    }
+    $xelis_wallet->set_wallet_executable();
+    $xelis_wallet->start_wallet();
   }
 }
 
