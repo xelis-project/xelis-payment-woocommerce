@@ -1,6 +1,9 @@
 #!/bin/bash
+set -e # exit on cmd fail
+
 cd block
 
+npm i
 npm run build
 
 cd ../
@@ -33,7 +36,7 @@ fi
 
 OUTPUT="xelis_payment.zip"
 
-rm $OUTPUT
+rm -f $OUTPUT
 zip -r "$OUTPUT" "${PATHS[@]}"
 
 echo "Package created!"
