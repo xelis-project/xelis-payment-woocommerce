@@ -67,9 +67,6 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
     $xelis_wallet = new Xelis_Wallet();
     $this->update_option("status", $xelis_wallet->get_status());
 
-    $log = $xelis_wallet->get_last_output();
-    $this->update_option("log", $log);
-
     $this->form_fields = array(
       'enabled' => array(
         'title' => __('Enable/Disable', 'xelis_payment'),
@@ -92,13 +89,7 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
       'status' => array(
         'title' => __('Wallet status', 'xelis_payment'),
         'type' => 'text',
-        'description' => "Check logs or try refreshing page if there is an error after changing the network.",
-        'disabled' => true,
-      ),
-      'log' => array(
-        'title' => __('Wallet log', 'xelis_payment'),
-        'type' => 'textarea',
-        'description' => "Last wallet output message.",
+        'description' => "Check wallet logs or try refreshing page if there is an error after changing the network.",
         'disabled' => true,
       ),
       'wallet_log_level' => array(
