@@ -30,7 +30,7 @@ if [ "$1" == "include-tables" ]; then
 fi
 
 if [ "$1" == "include-wallet" ]; then
-  PATHS+=("./xelis_pkg")
+  PATHS+=("./xelis_pkg/xelis_wallet")
 fi
 
 

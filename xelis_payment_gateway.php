@@ -14,6 +14,8 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
 
   public string $wallet_threads;
 
+  public string $wallet_log_level;
+
   public string $precomputed_tables_size;
 
   private static $instance = null;
@@ -37,6 +39,7 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
     $this->node_endpoint = $this->get_option('node_endpoint', 'https://node.xelis.io');
     $this->whitelist_tags = $this->get_option('whitelist_tags', '');
     $this->wallet_threads = $this->get_option('wallet_threads', '4');
+    $this->wallet_log_level = $this->get_option('wallet_log_level', 'info');
     $this->precomputed_tables_size = $this->get_option('precomputed_tables_size', '13');
 
     $this->init_form_fields();
@@ -97,6 +100,20 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
         'type' => 'textarea',
         'description' => "Last wallet output message.",
         'disabled' => true,
+      ),
+      'wallet_log_level' => array(
+        'title' => __('Wallet log level', 'xelis_payment'),
+        'type' => 'select',
+        'options' => array(
+          'info' => __('Info', 'xelis_payment'),
+          'warn' => __('Warn', 'xelis_payment'),
+          'error' => __('Error', 'xelis_payment'),
+          'debug' => __('Debug', 'xelis_payment'),
+          'trace' => __('Trace', 'xelis_payment'),
+          'off' => __('Off', 'xelis_payment'),
+        ),
+        'default' => 'info',
+        'description' => "More or less log information.",
       ),
       'node_endpoint' => array(
         'title' => __('Node endpoint', 'xelis_payment'),

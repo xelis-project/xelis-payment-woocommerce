@@ -344,6 +344,7 @@ class Xelis_Wallet
       . " --disable-log-color "
       . " --disable-interactive-mode "
       . " --rpc-threads " . $gateway->wallet_threads
+      . " --log-level " . $gateway->wallet_log_level
       . " --precomputed-tables-l1 " . $gateway->precomputed_tables_size;
     //. " --force-stable-balance ";
 
