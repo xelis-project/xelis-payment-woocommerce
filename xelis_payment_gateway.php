@@ -180,8 +180,8 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
       $this->network = $network;
 
       try {
-        // the wallet will restart automatically in xelis_payment.php
         $xelis_wallet->close_wallet();
+        $xelis_wallet->start_wallet();
       } catch (Exception $e) {
         $this->add_error("Can't close wallet" . $e->getMessage());
         $this->display_errors();

@@ -115,10 +115,19 @@ function render_page()
       }
     }
 
-    if (isset($_POST["restart"])) {
+    if (isset($_POST["start"])) {
       try {
         $xelis_wallet->start_wallet();
-        $success_msg = "Wallet is now running";
+        $success_msg = "Wallet is starting";
+      } catch (Exception $e) {
+        $err_msg = $e->getMessage();
+      }
+    }
+
+    if (isset($_POST["stop"])) {
+      try {
+        $xelis_wallet->close_wallet();
+        $success_msg = "Wallet is closing";
       } catch (Exception $e) {
         $err_msg = $e->getMessage();
       }
@@ -304,7 +313,7 @@ function render_page()
         <div><?php echo $xelis_gateway->node_endpoint ?></div>
       </div>
       <div>
-        <div>Redirect wallet address</div>
+        <div>Redirect funds</div>
         <div><?php echo $xelis_gateway->wallet_addr ? $xelis_gateway->wallet_addr : 'not set' ?></div>
       </div>
     </div>
@@ -319,7 +328,14 @@ function render_page()
       <br>
       <form method="post" action="">
         <span>Wallet is not running: </span>
-        <input type="submit" name="restart" value="Restart">
+        <input type="submit" name="start" value="Start">
+      </form>
+    <?php endif; ?>
+    <?php if ($is_running): ?>
+      <br>
+      <form method="post" action="">
+        <span>Wallet is running: </span>
+        <input type="submit" name="stop" value="Stop">
       </form>
     <?php endif; ?>
     <br>
