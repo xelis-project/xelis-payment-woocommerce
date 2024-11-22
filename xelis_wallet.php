@@ -221,12 +221,16 @@ class Xelis_Wallet
 
   public function get_wallet_pid(): int|null
   {
-    $pid = file_get_contents($this->wallet_pid_path);
-    if (!$pid) {
-      return null;
+    if (file_exists($this->wallet_pid_path)) {
+      $pid = file_get_contents($this->wallet_pid_path);
+      if (!$pid) {
+        return null;
+      }
+  
+      return intval($pid);
     }
 
-    return intval($pid);
+    return null;
   }
 
   public function shift_xel(int $amount)
