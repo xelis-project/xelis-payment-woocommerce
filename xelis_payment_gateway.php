@@ -23,7 +23,7 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
   public function __construct()
   {
     $this->id = 'xelis_payment';
-    $this->icon = plugins_url('assets/icon.png');
+    $this->icon = plugins_url('/assets/icon.png', __FILE__);
     $this->has_fields = false;
     $this->method_title = __('XELIS Payment', 'xelis_payment');
     $this->method_description = __('A XELIS payment gateway for WooCommerce.', 'xelis_payment');
