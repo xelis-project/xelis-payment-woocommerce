@@ -194,14 +194,14 @@ export const Content = (props) => {
           <div className="xelis-payment-divider" />,
           <div>
             <div>Your transaction</div>
-            <a href={get_explorer_tx_link({ tx: payment_state.tx })} target="_blank">
+            <a href={get_explorer_tx_link({ tx: payment_state.tx, network: settings.network })} target="_blank">
               {payment_state.tx}
             </a>
           </div>,
           <div className="xelis-payment-divider" />,
           <div>
             <div>Refund transaction</div>
-            <a href={get_explorer_tx_link({ tx: payment_state.refund_tx })} target="_blank">
+            <a href={get_explorer_tx_link({ tx: payment_state.refund_tx, network: settings.network })} target="_blank">
               {payment_state.refund_tx}
             </a>
           </div>,
@@ -220,7 +220,7 @@ export const Content = (props) => {
           <div className="xelis-payment-divider" />,
           <div>
             <div>Your transaction</div>
-            <a href={get_explorer_tx_link({ tx: payment_state.tx })} target="_blank">
+            <a href={get_explorer_tx_link({ tx: payment_state.tx, network: settings.network })} target="_blank">
               {payment_state.tx}
             </a>
           </div>,
@@ -239,14 +239,14 @@ export const Content = (props) => {
           <div className="xelis-payment-divider" />,
           <div>
             <div>Your transaction</div>
-            <a href={get_explorer_tx_link({ tx: payment_state.tx })} target="_blank">
+            <a href={get_explorer_tx_link({ tx: payment_state.tx, network: settings.network })} target="_blank">
               {payment_state.tx}
             </a>
           </div>,
           <div className="xelis-payment-divider" />,
           <div>
             <div>Refund transaction</div>
-            <a href={get_explorer_tx_link({ tx: payment_state.refund_tx })} target="_blank">
+            <a href={get_explorer_tx_link({ tx: payment_state.refund_tx, network: settings.network })} target="_blank">
               {payment_state.refund_tx}
             </a>
           </div>,
@@ -268,7 +268,7 @@ export const Content = (props) => {
           <div className="xelis-payment-divider" />,
           <div>
             <div>Your transaction</div>
-            <a href={get_explorer_tx_link({ tx: payment_state.tx })} target="_blank">
+            <a href={get_explorer_tx_link({ tx: payment_state.tx, network: settings.network })} target="_blank">
               {payment_state.tx}
             </a>
           </div>,
