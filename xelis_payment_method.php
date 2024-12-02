@@ -23,26 +23,20 @@ class Xelis_Payment_Method extends AbstractPaymentMethodType
     // import the require script needed to map react with wp.element global window variable
     wp_register_script(
       'xelis_payment_method_require',
-      plugins_url('/block/require.js', __FILE__),
+      plugins_url('/client/require.js', __FILE__),
       [],
-      filemtime(plugin_dir_path(__FILE__) . '/block/require.js'),
+      filemtime(plugin_dir_path(__FILE__) . '/client/require.js'),
       true
     );
 
     wp_register_script(
       'xelis_payment_method',
-      plugins_url('/block/build/index.js', __FILE__),
+      plugins_url('/client/build/block.js', __FILE__),
       [],
-      filemtime(plugin_dir_path(__FILE__) . '/block/build/index.js'),
+      filemtime(plugin_dir_path(__FILE__) . '/client/build/block.js'),
       true
     );
 
-    wp_enqueue_style(
-      'xelis_payment_style',
-      plugins_url('/block/style.css', __FILE__),
-      [],
-      filemtime(plugin_dir_path(__FILE__) . '/block/style.css'),
-    );
 
     return ['xelis_payment_method_require', 'xelis_payment_method'];
   }

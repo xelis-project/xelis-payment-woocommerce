@@ -3,11 +3,7 @@ import pretty_ms from 'pretty-ms';
 import { QRCodeSVG } from 'qrcode.react';
 import Icons from './icons.js';
 
-const { createElement, useState, useEffect, useCallback } = wp.element;
-const { registerPaymentMethod } = wc.wcBlocksRegistry;
-const { getSetting } = wc.wcSettings;
-
-const settings = getSetting('xelis_payment_data');
+const { useState, useEffect, useCallback } = wp.element;
 
 async function fetch_payment_state({ reload } = { reload: false, update: false }) {
   let endpoint = `/?rest_route=/xelis_payment/payment_state`;
@@ -15,25 +11,25 @@ async function fetch_payment_state({ reload } = { reload: false, update: false }
   return await fetch(endpoint);
 }
 
-const get_explorer_tx_link = (tx) => {
-  switch (settings.network) {
+const get_explorer_tx_link = ({ tx, network }) => {
+  switch (network) {
     case "mainnet":
       return `https://explorer.xelis.io/txs/${tx}`;
     case "testnet":
       return `https://testnet-explorer.xelis.io/txs/${tx}`;
+    default:
+      return "";
   }
-
-  return "";
 }
 
-const Content = (props) => {
+export const Content = (props) => {
+  const { settings } = props;
+
   const [init_loading, set_init_loading] = useState(false);
   const [init_error, set_init_error] = useState();
 
   const [duration, set_duration] = useState(0);
-  const [payment_state, set_payment_state] = useState(() => {
-    //if (settings['payment_state']) return settings['payment_state'];
-  });
+  const [payment_state, set_payment_state] = useState();
 
   const init_payment_state = useCallback(async (options) => {
     set_init_loading(true);
@@ -63,34 +59,37 @@ const Content = (props) => {
     }
   }, []);
 
-  const copy = useCallback(() => {
+  const copy_address = useCallback(() => {
     navigator.clipboard.writeText(payment_state.addr);
     window.alert(`The integrated address was copied.`);
   }, [payment_state]);
 
+  const copy_amount = useCallback(() => {
+    navigator.clipboard.writeText(payment_state.xel);
+    window.alert(`The amount was copied.`);
+  }, [payment_state])
+
   useEffect(() => {
     if (!payment_state) return;
-    set_duration((payment_state.expiration * 1000) - Date.now());
 
-    const interval_id = setInterval(() => {
-      set_duration((duration) => {
-        const new_duration = Math.max(0, duration - 1000);
-        if (new_duration === 0) {
-          clearInterval(interval_id);
-          set_payment_state((s) => {
-            if (s.status === `waiting`) {
-              return { ...s, status: `expired` };
-            }
-            return s;
-          });
+    let timeout_id = null;
+    function check_duration() {
+      set_payment_state((s) => {
+        const duration = (s.expiration * 1000) - Date.now();
+        if (duration < 0) {
+          return { ...s, status: `expired` };
         }
 
-        return new_duration;
+        set_duration(duration);
+        return s;
       });
-    }, 1000);
 
+      timeout_id = setTimeout(check_duration, 1000);
+    }
+
+    timeout_id = check_duration();
     return () => {
-      clearInterval(interval_id);
+      clearTimeout(timeout_id);
     }
   }, [payment_state]);
 
@@ -121,7 +120,7 @@ const Content = (props) => {
     render = [
       <div className="xelis-payment-init-loading">
         <Icons.Loading className="xelis-payment-loading-icon" />
-        Fetching XEL/USD quote.
+        Loading data...
       </div>
     ];
   } else if (payment_state) {
@@ -140,7 +139,7 @@ const Content = (props) => {
               <QRCodeSVG value={payment_state.addr} className="xelis-payment-addr-qrcode" />
               <div className="xelis-payment-addr-value">
                 <div>{payment_state.addr}</div>
-                <button type="button" onClick={copy} title="Copy integrated address">
+                <button type="button" onClick={copy_address} title="Copy integrated address">
                   <Icons.Copy />
                 </button>
               </div>
@@ -148,6 +147,9 @@ const Content = (props) => {
             <div className="xelis-payment-amount">
               <Icons.Xelis fillColor1="transparent" fillColor2="black" />
               {payment_state.xel} XEL
+              <button type="button" onClick={copy_amount} title="Copy amount">
+                <Icons.Copy />
+              </button>
             </div>
           </div>,
           <div className="xelis-payment-waiting">
@@ -192,14 +194,14 @@ const Content = (props) => {
           <div className="xelis-payment-divider" />,
           <div>
             <div>Your transaction</div>
-            <a href={get_explorer_tx_link(payment_state.tx)} target="_blank">
+            <a href={get_explorer_tx_link({ tx: payment_state.tx })} target="_blank">
               {payment_state.tx}
             </a>
           </div>,
           <div className="xelis-payment-divider" />,
           <div>
             <div>Refund transaction</div>
-            <a href={get_explorer_tx_link(payment_state.refund_tx)} target="_blank">
+            <a href={get_explorer_tx_link({ tx: payment_state.refund_tx })} target="_blank">
               {payment_state.refund_tx}
             </a>
           </div>,
@@ -218,7 +220,7 @@ const Content = (props) => {
           <div className="xelis-payment-divider" />,
           <div>
             <div>Your transaction</div>
-            <a href={get_explorer_tx_link(payment_state.tx)} target="_blank">
+            <a href={get_explorer_tx_link({ tx: payment_state.tx })} target="_blank">
               {payment_state.tx}
             </a>
           </div>,
@@ -237,14 +239,14 @@ const Content = (props) => {
           <div className="xelis-payment-divider" />,
           <div>
             <div>Your transaction</div>
-            <a href={get_explorer_tx_link(payment_state.tx)} target="_blank">
+            <a href={get_explorer_tx_link({ tx: payment_state.tx })} target="_blank">
               {payment_state.tx}
             </a>
           </div>,
           <div className="xelis-payment-divider" />,
           <div>
             <div>Refund transaction</div>
-            <a href={get_explorer_tx_link(payment_state.refund_tx)} target="_blank">
+            <a href={get_explorer_tx_link({ tx: payment_state.refund_tx })} target="_blank">
               {payment_state.refund_tx}
             </a>
           </div>,
@@ -266,7 +268,7 @@ const Content = (props) => {
           <div className="xelis-payment-divider" />,
           <div>
             <div>Your transaction</div>
-            <a href={get_explorer_tx_link(payment_state.tx)} target="_blank">
+            <a href={get_explorer_tx_link({ tx: payment_state.tx })} target="_blank">
               {payment_state.tx}
             </a>
           </div>,
@@ -280,7 +282,9 @@ const Content = (props) => {
   </div>;
 }
 
-const Label = () => {
+export const Label = (props) => {
+  const { settings } = props;
+
   return <div className="xelis-payment-label">
     <div className="xelis-payment-label-value">
       <Icons.Xelis fillColor1="#02FFCF" fillColor2="black" />
@@ -291,16 +295,3 @@ const Label = () => {
     </div>}
   </div>;
 }
-
-registerPaymentMethod({
-  name: "xelis_payment",
-  label: Label(),
-  ariaLabel: "",
-  content: createElement(Content),
-  edit: createElement(Content),
-  canMakePayment: () => {
-    // always return true and use the payment state error message if you can't use it
-    // this function hides the gateway from the payment options (I prefer display error msg instead)
-    return true;
-  }
-});

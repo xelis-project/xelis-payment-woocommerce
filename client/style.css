@@ -47,10 +47,11 @@
 }
 
 .xelis-payment-button {
-  background-color: #7afad3;
+  background-color: #7afad3 !important;
+  color: black !important;
   border: none;
   outline: none;
-  padding: .5rem;
+  padding: .5rem !important;
   cursor: pointer;
   display: flex;
   gap: .25rem;
@@ -67,8 +68,8 @@
 }
 
 .xelis-payment-button:hover {
-  background-color: black;
-  color: #7afad3;
+  background-color: black !important;
+  color: #7afad3 !important;
 }
 
 .xelis-payment-addr {
@@ -106,15 +107,17 @@
 }
 
 .xelis-payment-addr-value button {
-  background: none;
+  background-color: transparent;
   color: white;
   border: none;
   cursor: pointer;
   outline: none;
+  padding: .5rem;
 }
 
 .xelis-payment-addr-value button:hover {
   color: #7afad3;
+  background-color: transparent;
 }
 
 .xelis-payment-addr-value button svg {
@@ -126,7 +129,8 @@
 
 .xelis-payment-amount {
   background: #7afad3;
-  padding: .5rem 1rem;
+  color: black;
+  padding: .4rem 1rem;
   font-weight: bold;
   font-size: 1.2rem;
   display: flex;
@@ -141,6 +145,27 @@
   min-height: 2rem;
   max-width: 2rem;
   max-height: 2rem;
+}
+
+.xelis-payment-amount button {
+  background-color: transparent;
+  color: black;
+  border: none;
+  cursor: pointer;
+  outline: none;
+  padding: .5rem;
+}
+
+.xelis-payment-amount button svg {
+  min-width: 1.5rem;
+  min-height: 1.5rem;
+  max-width: 1.5rem;
+  max-height: 1.5rem;
+}
+
+.xelis-payment-amount button:hover {
+  color: gray;
+  background-color: transparent;
 }
 
 .xelis-payment-waiting {
@@ -183,6 +208,7 @@
   display: inline-flex;
   gap: .25rem;
   flex-direction: row;
+  color: black;
 }
 
 .xelis-payment-highlight svg {

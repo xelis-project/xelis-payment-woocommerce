@@ -43,19 +43,53 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
     $this->precomputed_tables_size = $this->get_option('precomputed_tables_size', '13');
 
     $this->init_form_fields();
-    add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
 
-    self::$instance = $this;
+    if (!isset(self::$instance)) {
+      add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
+      self::$instance = $this;
+    }
   }
 
   public static function get_instance()
   {
     // __construct is first called by the woocommerce payment gateway so we don't initialized here
-    //if (!isset(self::$instance)) {
-      //self::$instance = new self();
-    //}
+    if (!isset(self::$instance)) {
+      self::$instance = new self();
+    }
 
     return self::$instance;
+  }
+
+  // needed or payment_fields wont be called
+  public function has_fields()
+  {
+    return true;
+  }
+
+  // for classic checkout
+  public function payment_fields()
+  {
+    // load div and add react component client side
+    wp_enqueue_script('wp-element');
+    wp_enqueue_script(
+      'xelis_payment_classic_require',
+      plugins_url('/client/require.js', __FILE__),
+      [],
+      filemtime(plugin_dir_path(__FILE__) . '/client/require.js'),
+      true
+    );
+
+    wp_enqueue_script(
+      'xelis_payment_classic',
+      plugins_url('/client/build/classic.js', __FILE__),
+      [],
+      filemtime(plugin_dir_path(__FILE__) . '/client/build/classic.js'),
+      true
+    );
+
+    ?>
+    <div id="xelis_payment_content"></div>
+    <?php
   }
 
   public function init_form_fields()
@@ -247,11 +281,10 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
       }
 
       if (($payment_timeout) < 5) {  // cannot set less than 5min
-        $this->add_error("Can't set less than 5min for payment window.");
+        $this->add_error("Can't set less than 5 min for payment window.");
         $this->display_errors();
         return false;
       }
-      ;
     }
 
     // don't have to validate whitelist_tags

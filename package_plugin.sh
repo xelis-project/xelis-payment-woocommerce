@@ -1,10 +1,11 @@
 #!/bin/bash
 set -e # exit on cmd fail
 
-cd block
+cd client
 
 npm i
-npm run build
+npm run build-block
+npm run build-classic
 
 cd ../
 
@@ -19,9 +20,10 @@ PATHS=(
   "./xelis_package.php"
   "./xelis_node.php"
   "./xelis_data.php"
-  "./block/style.css"
-  "./block/build/index.js"
-  "./block/require.js"
+  "./client/style.css"
+  "./client/build/block.js"
+  "./client/build/classic.js"
+  "./client/require.js"
   "./assets"
 )
 

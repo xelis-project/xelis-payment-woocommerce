@@ -290,32 +290,43 @@ class Xelis_Wallet
     return false;
   }
 
-  public function get_output()
-  {
-    if (!file_exists($this->wallet_output_path)) {
-      return [];
-    }
-
-    $lines = file($this->wallet_output_path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    for ($i = 0; $i < count($lines); $i++) {
-      $lines[$i] = trim($lines[$i]);
-    }
-
-    return $lines;
-  }
-
-  public function get_last_output()
+  public function get_output(int $max_read = 100)
   {
     $wallet_log_file = __DIR__ . '/wallet_output.log';
     if (!file_exists($wallet_log_file)) {
-      return "";
+      return '';
+    }
+  
+    $handle = fopen($wallet_log_file, 'r');
+    if (!$handle) {
+      return '';
     }
 
-    $file = new SplFileObject($wallet_log_file);
-    $file->seek(PHP_INT_MAX);
-    $file->seek(max($file->key() - 1, 0));
-    $last_line = $file->current();
-    return trim($last_line);
+    fseek($handle, offset: 0, whence: SEEK_END);
+    $buffer = '';
+    $read_size = 1024;
+    $read_count = 0;
+
+    while (ftell($handle) > 0) {
+      $pos = ftell($handle);
+      $offset = $pos - $read_size;
+      if ($offset < 0) {
+        $offset = 0;
+      }
+
+      fseek($handle, $offset);
+      $chunk = fread($handle, $read_size);
+      $buffer = $chunk . $buffer;
+      fseek($handle, $offset);
+      $read_count++;
+
+      if ($read_count > $max_read) {
+        break;
+      }
+    }
+
+    fclose($handle);
+    return $buffer;
   }
 
   public function has_executable()

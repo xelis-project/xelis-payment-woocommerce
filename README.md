@@ -2,6 +2,7 @@
 
 Accept XELIS as a means of payment for the most popular WordPress eCommerce platform.
 This plugin is designed to be simple to integrate for store owner and seamless to use for customers.
+It supports both the WooCommerce `Classic Checkout` and `Checkout Block`.
 
 ## Are you a store owner?
 

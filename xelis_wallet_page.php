@@ -451,9 +451,7 @@ function render_page()
     <h2>Logs</h2>
     <?php
     echo '<textarea style="width: 100%;" rows="10">';
-    foreach ($logs as $line) {
-      echo htmlspecialchars($line) . "\n";
-    }
+    echo htmlspecialchars($logs);
     echo ' </textarea>';
     ?>
   </div>

@@ -11,7 +11,7 @@ require_once __DIR__ . '/xelis_wallet_page.php';
 /**
  * Plugin Name: XELIS Payment
  * Description: A XELIS payment for WooCommerce.
- * Version: 0.2.1
+ * Version: 0.2.2
  * Author: g45t345rt
  */
 
@@ -19,6 +19,19 @@ require_once __DIR__ . '/xelis_wallet_page.php';
 if (!defined(constant_name: 'ABSPATH')) {
   exit;
 }
+
+function load_style() {
+  wp_register_style('xelis_payment_style', plugins_url('/client/style.css', __FILE__));
+
+  wp_enqueue_style(
+    'xelis_payment_style',
+    plugins_url('/client/style.css', __FILE__),
+    [],
+    filemtime(plugin_dir_path(__FILE__) . '/client/style.css'),
+  );
+}
+
+add_action('wp_enqueue_scripts', 'load_style', 999);
 
 function echo_err(string $message)
 {
