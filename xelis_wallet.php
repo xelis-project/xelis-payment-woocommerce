@@ -226,7 +226,7 @@ class Xelis_Wallet
       if (!$pid) {
         return null;
       }
-  
+
       return intval($pid);
     }
 
@@ -279,11 +279,12 @@ class Xelis_Wallet
     if ($pid) {
       // TODO: windows
       $success = posix_kill($pid, 15); // 15 is SIGTERM
-      if (!$success) {
+      if ($success) {
+        unlink($this->wallet_pid_path);
+      } else {
         throw new Exception(posix_get_last_error());
       }
-
-      unlink($this->wallet_pid_path);
+ 
       return true;
     }
 
@@ -292,12 +293,11 @@ class Xelis_Wallet
 
   public function get_output(int $max_read = 100)
   {
-    $wallet_log_file = __DIR__ . '/wallet_output.log';
-    if (!file_exists($wallet_log_file)) {
+    if (!file_exists($this->wallet_output_path)) {
       return '';
     }
-  
-    $handle = fopen($wallet_log_file, 'r');
+
+    $handle = fopen($this->wallet_output_path, 'r');
     if (!$handle) {
       return '';
     }
