@@ -18,6 +18,8 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
 
   public string $precomputed_tables_size;
 
+  public string $payment_quote;
+
   private static $instance = null;
 
   public function __construct()
@@ -41,6 +43,7 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
     $this->wallet_threads = $this->get_option('wallet_threads', '4');
     $this->wallet_log_level = $this->get_option('wallet_log_level', 'info');
     $this->precomputed_tables_size = $this->get_option('precomputed_tables_size', '13');
+    $this->payment_quote = $this->get_option('payment_quote', '');
 
     $this->init_form_fields();
 
@@ -157,6 +160,11 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
         'type' => 'text',
         'description' => __('Set the payment window timeout. Lock the XEL/USD quote price. Default is 30 min.', 'xelis_payment'),
         'default' => '30',
+      ),
+      'payment_quote' => array(
+        'title' => __('Fixed USD/XEL Quote', 'xelis_payment'),
+        'type' => 'text',
+        'description' => __('Set a fixed value for the USD/XEL quote. Leaving empty will use the automatic quote. Request the 1-day avg price weighted by market volume.', 'xelis_payment'),
       ),
       'whitelist_tags' => array(
         'title' => __('Whitelist tags', 'xelis_payment'),

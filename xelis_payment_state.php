@@ -80,14 +80,22 @@ class Xelis_Payment_State
     }
 
     $xelis_data = new Xelis_Data();
-    try {
-      $quote = $xelis_data->get_today_xel_usdt_quote();
-      $xel = round($total / $quote, 8);
-    } catch (Exception $e) {
-      error_log('Error in init_payment_state: ' . $e->getMessage());
-      throw new Exception($e->getMessage());
+
+    $quote = $gateway->payment_quote;
+    if ($quote == '') {
+      try {
+        $quote = $xelis_data->get_today_xel_usdt_quote();
+      } catch (Exception $e) {
+        error_log('Error in init_payment_state: ' . $e->getMessage());
+        throw new Exception($e->getMessage());
+      }
     }
 
+    if (filter_var($quote, FILTER_VALIDATE_FLOAT) == false) {
+      throw new Exception("Invalid quote value.");
+    }
+
+    $xel = round($total / $quote, 8);
     $expiration = time() + $timeout;
     $network = $xelis_wallet->get_network();
 
