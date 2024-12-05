@@ -79,7 +79,7 @@
   align-items: center;
 }
 
-@container (min-width: 700px) {
+@container (min-width: 600px) {
   .xelis-payment-addr {
     flex-direction: row;
   }
@@ -98,7 +98,7 @@
 .xelis-payment-addr-value {
   word-break: break-word;
   color: white;
-  padding: .5rem 1rem;
+  padding: .5rem;
   line-height: 1.3rem;
   display: flex;
   gap: .5rem;
@@ -113,11 +113,12 @@
   cursor: pointer;
   outline: none;
   padding: .5rem;
+  transition: all .25s;
 }
 
 .xelis-payment-addr-value button:hover {
-  color: #7afad3;
-  background-color: transparent;
+  color: black;
+  background-color: #7afad3;
 }
 
 .xelis-payment-addr-value button svg {
@@ -130,14 +131,23 @@
 .xelis-payment-amount {
   background: #7afad3;
   color: black;
-  padding: .4rem 1rem;
+  padding: .5rem;
   font-weight: bold;
   font-size: 1.2rem;
   display: flex;
   gap: .5rem;
   flex-direction: row;
   align-items: center;
-  white-space: nowrap;
+  justify-content: space-between;
+  width: 100%;
+  line-height: 1.3rem;
+  word-break: break-all;
+}
+
+@container (min-width: 600px) {
+  .xelis-payment-amount {
+    width: inherit;
+  }
 }
 
 .xelis-payment-amount svg {
@@ -154,6 +164,8 @@
   cursor: pointer;
   outline: none;
   padding: .5rem;
+  box-shadow: none;
+  transition: all .25s;
 }
 
 .xelis-payment-amount button svg {
@@ -164,14 +176,36 @@
 }
 
 .xelis-payment-amount button:hover {
-  color: gray;
-  background-color: transparent;
+  color: #7afad3;
+  background-color: black;
 }
 
 .xelis-payment-waiting {
   display: flex;
   gap: .5rem;
   align-items: center;
+  border: thin dashed #515151;
+  padding: .5rem;
+  width: 100%;
+  animation: wait-animate 3s infinite;
+}
+
+@container (min-width: 600px) {
+  .xelis-payment-waiting {
+    width: inherit;
+  }
+}
+
+@keyframes wait-animate {
+  30% {
+    opacity: .5;
+  }
+  40% {
+    opacity: .5;
+  }
+  90% {
+    opacity: 1;
+  }
 }
 
 .xelis-payment-init-loading {
@@ -193,7 +227,7 @@
   min-height: 1.5rem;
   max-width: 1.5rem;
   max-height: 1.5rem;
-  animation: rotate-loading-icon 1s infinite;
+  animation: rotate-loading-icon 3s infinite;
 }
 
 @keyframes rotate-loading-icon {

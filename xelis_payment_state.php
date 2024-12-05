@@ -20,6 +20,7 @@ class Xelis_Payment_State_Object
   public int $expiration;
   public string $addr;
   public float $xel;
+  public float $quote;
   public Xelis_Payment_Status $status;
   public string $tx;
   public string $refund_tx;
@@ -28,7 +29,7 @@ class Xelis_Payment_State_Object
   public string $redirect_tx;
   public string $from_addr;
 
-  public function __construct($payment_hash, $cart_hash, $start_topoheight, $expiration, $addr, $xel, $network)
+  public function __construct($payment_hash, $cart_hash, $start_topoheight, $expiration, $addr, $xel, $network, $quote)
   {
     $this->payment_hash = $payment_hash;
     $this->cart_hash = $cart_hash;
@@ -37,6 +38,7 @@ class Xelis_Payment_State_Object
     $this->expiration = $expiration;
     $this->addr = $addr;
     $this->xel = $xel;
+    $this->quote = $quote;
     $this->status = Xelis_Payment_Status::WAITING;
     $this->tx = "";
     $this->refund_tx = "";
@@ -79,7 +81,8 @@ class Xelis_Payment_State
 
     $xelis_data = new Xelis_Data();
     try {
-      $xel = $xelis_data->convert_usd_to_xel($total);
+      $quote = $xelis_data->get_today_xel_usdt_quote();
+      $xel = round($total / $quote, 8);
     } catch (Exception $e) {
       error_log('Error in init_payment_state: ' . $e->getMessage());
       throw new Exception($e->getMessage());
@@ -95,7 +98,8 @@ class Xelis_Payment_State
       $expiration,
       $addr,
       $xel,
-      $network
+      $network,
+      $quote
     );
 
     $this->set_payment_state($state);

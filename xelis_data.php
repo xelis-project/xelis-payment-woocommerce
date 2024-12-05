@@ -2,7 +2,7 @@
 
 class Xelis_Data
 {
-  public function get_today_price_usdt(): float
+  public function get_today_xel_usdt_quote(): float
   {
     // TODO: maybe add more trusted source for price data
     $url = 'https://index.xelis.io/views/get_market_tickers_time(*)?count=true&limit=1&order=time::desc&param=86400&where=asset::eq::USDT';
@@ -30,11 +30,5 @@ class Xelis_Data
     }
 
     throw new Exception("Can't parse price from response.");
-  }
-
-  public function convert_usd_to_xel(float $usd): float
-  {
-    $price = $this->get_today_price_usdt();
-    return round($usd / $price, 8);
   }
 }

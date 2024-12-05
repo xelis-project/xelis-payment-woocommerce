@@ -11,6 +11,13 @@ async function fetch_payment_state({ reload } = { reload: false, update: false }
   return await fetch(endpoint);
 }
 
+function count_decimals(value) {
+  let str = value.toString();
+  let dot_index = str.indexOf(".");
+  if (dot_index === -1) return 0;
+  return str.length - dot_index - 1;
+}
+
 const get_explorer_tx_link = ({ tx, network }) => {
   switch (network) {
     case "mainnet":
@@ -151,10 +158,13 @@ export const Content = (props) => {
                 <Icons.Copy />
               </button>
             </div>
+            <div title={`${payment_state.quote} USD / XEL`}>
+              {count_decimals(payment_state.quote) > 2 ? `≈` : ``}{payment_state.quote.toFixed(2)} USD / XEL
+            </div>
           </div>,
           <div className="xelis-payment-waiting">
             <Icons.Loading className="xelis-payment-loading-icon" />
-            Waiting for transaction...
+            Waiting for transaction
           </div>,
           <div>
             You have <span className="xelis-payment-highlight">
