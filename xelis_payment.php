@@ -11,7 +11,7 @@ require_once __DIR__ . '/xelis_wallet_page.php';
 /**
  * Plugin Name: XELIS Payment
  * Description: A XELIS payment for WooCommerce.
- * Version: 0.2.2
+ * Version: 0.2.3
  * Author: g45t345rt
  */
 
