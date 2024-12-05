@@ -20,21 +20,8 @@ function xelis_wallet_menu()
 
 function render_page()
 {
+  $errors = [];
   $xelis_wallet = new Xelis_Wallet();
-
-  try {
-    $logs = $xelis_wallet->get_output();
-    $status = $xelis_wallet->get_status();
-    $is_running = $xelis_wallet->is_process_running();
-    $is_online = $xelis_wallet->is_online();
-
-    $balance_atomic = $xelis_wallet->get_balance();
-    $balance = $xelis_wallet->shift_xel($balance_atomic);
-    $addr = $xelis_wallet->get_address();
-  } catch (Exception $e) {
-    $err_msg = $e->getMessage();
-  }
-
   $xelis_gateway = Xelis_Payment_Gateway::get_instance();
 
   $filter_address = null;
@@ -102,7 +89,7 @@ function render_page()
         $xelis_wallet->rescan();
         $success_msg = "Rescan started";
       } catch (Exception $e) {
-        $err_msg = $e->getMessage();
+        $errors[] = "Rescan: " . $e->getMessage();
       }
     }
 
@@ -110,26 +97,29 @@ function render_page()
       try {
         $xelis_wallet->set_online_mode($xelis_gateway->node_endpoint);
         $success_msg = "Wallet is now online";
+        sleep(1);
       } catch (Exception $e) {
-        $err_msg = $e->getMessage();
+        $errors[] = "Reconnect endpoint: " . $e->getMessage();
       }
     }
 
     if (isset($_POST["start"])) {
       try {
         $xelis_wallet->start_wallet();
-        $success_msg = "Wallet is starting";
+        $success_msg = "Wallet started";
+        sleep(1);
       } catch (Exception $e) {
-        $err_msg = $e->getMessage();
+        $errors[] = "Start wallet: " . $e->getMessage();
       }
     }
 
     if (isset($_POST["stop"])) {
       try {
         $xelis_wallet->close_wallet();
-        $success_msg = "Wallet is closing";
+        $success_msg = "Wallet is closed";
+        sleep(1);
       } catch (Exception $e) {
-        $err_msg = $e->getMessage();
+        $errors[] = "Stop wallet: " . $e->getMessage();
       }
     }
   }
@@ -151,7 +141,34 @@ function render_page()
       );
     }
   } catch (Exception $e) {
-    $err_msg = "get_transactions: " . $e->getMessage();
+    $errors[] = "Get transactions: " . $e->getMessage();
+  }
+
+  try {
+    $logs = $xelis_wallet->get_output();
+  } catch (Exception $e) {
+    $errors[] = "Get output: " . $e->getMessage();
+  }
+
+  try {
+    $status = $xelis_wallet->get_status();
+    $is_running = $xelis_wallet->is_process_running();
+    $is_online = $xelis_wallet->is_online();
+
+    try {
+      $balance_atomic = $xelis_wallet->get_balance();
+      $balance = $xelis_wallet->shift_xel($balance_atomic);
+    } catch (Exception $e) {
+      $errors[] = "Get balance: " . $e->getMessage();
+    }
+
+    try {
+      $addr = $xelis_wallet->get_address();
+    } catch (Exception $e) {
+      $errors[] = "Get address: " . $e->getMessage();
+    }
+  } catch (Exception $e) {
+    $errors[] = "Get status: " . $e->getMessage();
   }
 
   ?>
@@ -264,35 +281,42 @@ function render_page()
       width: 100%;
     }
 
-    .error-msg {
+    .errors {
+      display: flex;
+      gap: .5rem;
+      flex-direction: column;
+    }
+
+    .errors div {
       color: red;
       padding: .5rem;
       font-size: 1rem;
       border: .1rem solid red;
     }
 
-    .success-msg {
+    .success {
       color: green;
       padding: .5rem;
       font-size: 1rem;
       border: .1rem solid green;
+      margin-bottom: .5rem;
     }
   </style>
   <div class="xelis-wallet-body">
     <h1><?php esc_html_e('XELIS Wallet', 'xelis_payment'); ?></h1>
     <?php
     if (isset($success_msg)) {
-      echo '<div style="color: green;">';
+      echo '<div class="success">';
       echo esc_html($success_msg);
       echo '</div>';
     }
     ?>
     <?php
-    if (isset($err_msg)) {
-      echo '<div class="error-msg">';
-      echo esc_html($err_msg);
-      echo '</div>';
+    echo '<div class="errors">';
+    foreach ($errors as $err) {
+      echo '<div>' . esc_html($err) . '</div>';
     }
+    echo '</div>';
     ?>
     <h2>Overview</h2>
     <div class="xelis-wallet-overview">
