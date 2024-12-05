@@ -341,7 +341,7 @@ function render_page()
         <div><?php echo $xelis_gateway->wallet_addr ? $xelis_gateway->wallet_addr : 'not set' ?></div>
       </div>
     </div>
-    <?php if (!$is_online): ?>
+    <?php if ($is_running && !$is_online): ?>
       <br>
       <form method="post" action="">
         <span>Wallet is offline: </span>
