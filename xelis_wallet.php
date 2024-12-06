@@ -155,7 +155,8 @@ class Xelis_Wallet
 
   public function fetch(string $method, array $params = null)
   {
-    $endpoint = 'http://localhost:8081/json_rpc';
+    $gateway = Xelis_Payment_Gateway::get_instance();
+    $endpoint = 'http://localhost:' . $gateway->wallet_local_port . '/json_rpc';
 
     $request = [
       'id' => 1,
@@ -171,6 +172,7 @@ class Xelis_Wallet
     $ch = curl_init($endpoint);
     $basic_token = "admin:admin";
 
+    //curl_setopt($ch, CURLOPT_TIMEOUT, 5);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
       'Authorization: Basic ' . base64_encode($basic_token),
@@ -267,13 +269,18 @@ class Xelis_Wallet
       $code = null;
       // use kill -0 instead of preg has it may be restrictive on VPS env
       exec("kill -0 " . $pid, $output, $code);
-      return $code === 0;
+      $is_running = $code === 0;
+      if (!$is_running) {
+        unlink($this->wallet_pid_path);
+      }
+
+      return $is_running;
     }
 
     return false;
   }
 
-  public function close_wallet(): bool
+  public function close_wallet()
   {
     $pid = $this->get_wallet_pid();
     if ($pid) {
@@ -284,11 +291,9 @@ class Xelis_Wallet
       } else {
         throw new Exception(posix_get_last_error());
       }
- 
-      return true;
+    } else {
+      throw new Exception("No PID to close wallet.");
     }
-
-    return false;
   }
 
   public function get_output(int $max_read = 100)
@@ -342,9 +347,25 @@ class Xelis_Wallet
     }
   }
 
+  public function is_port_in_use($port)
+  {
+    $socket = fsockopen("127.0.0.1", $port, $errno, $errstr, 1);
+
+    if (is_resource($socket)) {
+      fclose($socket);
+      return true;
+    }
+
+    return false;
+  }
+
   public function start_wallet()
   {
     $gateway = Xelis_Payment_Gateway::get_instance();
+    $port = $gateway->wallet_local_port;
+    if ($this->is_port_in_use($port)) {
+      throw new Exception("Port " . $port . " already in use.");
+    }
 
     // this is local only we don't care if we set password in clear and is admin/admin
     $xelis_wallet_cmd = $this->wallet_path
@@ -353,7 +374,7 @@ class Xelis_Wallet
       . " --wallet-path " . __DIR__ . "/wallet/" . $gateway->network
       . " --password admin "
       . " --precomputed-tables-path " . __DIR__ . "/precomputed_tables/"
-      . " --rpc-bind-address 127.0.0.1:8081 "
+      . " --rpc-bind-address 127.0.0.1:" . $gateway->wallet_local_port
       . " --rpc-username admin "
       . " --rpc-password admin "
       . " --disable-log-color "

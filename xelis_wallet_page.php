@@ -325,6 +325,10 @@ function render_page()
         <div><?php echo $status ?></div>
       </div>
       <div>
+        <div>Local port</div>
+        <div><?php echo $xelis_gateway->wallet_local_port ?></div>
+      </div>
+      <div>
         <div>Enabled</div>
         <div><?php echo $xelis_gateway->enabled ?></div>
       </div>
@@ -341,7 +345,7 @@ function render_page()
         <div><?php echo $xelis_gateway->wallet_addr ? $xelis_gateway->wallet_addr : 'not set' ?></div>
       </div>
     </div>
-    <?php if ($is_running && !$is_online): ?>
+    <?php if ($is_running && isset($is_online) && !$is_online): ?>
       <br>
       <form method="post" action="">
         <span>Wallet is offline: </span>
@@ -367,9 +371,9 @@ function render_page()
       <a href="/wp-admin/admin.php?page=wc-settings&tab=checkout&section=xelis_payment">Go to XELIS Payment settings</a>
     </div>
     <h2>Address</h2>
-    <div class="xelis-wallet-addr"><?php echo $addr ?></div>
+    <div class="xelis-wallet-addr"><?php echo isset($addr) ? $addr : '' ?></div>
     <h2>Balance</h2>
-    <div class="xelis-wallet-balance"><?php echo $balance ?> XEL</div>
+    <div class="xelis-wallet-balance"><?php echo isset($balance) ? $balance : '' ?> XEL</div>
     <h2>Send funds</h2>
     <form method="post" action="" class="xelis-wallet-send-funds">
       <div>

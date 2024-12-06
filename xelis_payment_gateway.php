@@ -20,6 +20,8 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
 
   public string $payment_quote;
 
+  public string $wallet_local_port;
+
   private static $instance = null;
 
   public function __construct()
@@ -44,6 +46,7 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
     $this->wallet_log_level = $this->get_option('wallet_log_level', 'info');
     $this->precomputed_tables_size = $this->get_option('precomputed_tables_size', '13');
     $this->payment_quote = $this->get_option('payment_quote', '');
+    $this->wallet_local_port = $this->get_option('wallet_local_port', '8081');
 
     $this->init_form_fields();
 
@@ -101,9 +104,6 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
     // disabling the plugin does not close the wallet in case there are pending payments
     // if you want to change the network you must wait until all payments have confirmed or expired
 
-    $xelis_wallet = new Xelis_Wallet();
-    $this->update_option("status", $xelis_wallet->get_status());
-
     $this->form_fields = array(
       'enabled' => array(
         'title' => __('Enable/Disable', 'xelis_payment'),
@@ -122,12 +122,6 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
         'description' => $enabled ? __('Disable the plugin if you want to change the network.', 'xelis_payment') : __('Change XELIS wallet network. You will need to set the node endpoint and wallet address again!', 'xelis_payment'),
         'disabled' => $enabled,
         'default' => 'mainnet',
-      ),
-      'status' => array(
-        'title' => __('Wallet status', 'xelis_payment'),
-        'type' => 'text',
-        'description' => "Check wallet logs or try refreshing page if there is an error after changing the network.",
-        'disabled' => true,
       ),
       'wallet_log_level' => array(
         'title' => __('Wallet log level', 'xelis_payment'),
@@ -154,6 +148,11 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
         'type' => 'text',
         'description' => __('Set the address of your XELIS wallet to redirect hot wallet funds automatically.', 'xelis_payment'),
         'default' => '',
+      ),
+      'wallet_local_port' => array(
+        'title' => __('Wallet local port', 'xelis_payment'),
+        'type' => 'text',
+        'description' => __('Set the port for the wallet local API. Defaults to 8081. Change it if your server is already using this port for another resource.', 'xelis_payment'),
       ),
       'payment_timeout' => array(
         'title' => __('Payment window timeout', 'xelis_payment'),
@@ -194,8 +193,6 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
 
     $network = $_POST['woocommerce_' . $this->id . '_network'];
     if ($network && $network !== $this->network) {
-      $xelis_wallet = new Xelis_Wallet();
-
       $new_node_endpoint = '';
       switch ($network) {
         case "mainnet":
@@ -222,10 +219,11 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
       $this->network = $network;
 
       try {
+        $xelis_wallet = new Xelis_Wallet();
         $xelis_wallet->close_wallet();
         $xelis_wallet->start_wallet();
       } catch (Exception $e) {
-        $this->add_error("Can't close wallet" . $e->getMessage());
+        $this->add_error("Can't restart wallet: " . $e->getMessage());
         $this->display_errors();
         return false;
       }
@@ -290,6 +288,26 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
 
       if (($payment_timeout) < 5) {  // cannot set less than 5min
         $this->add_error("Can't set less than 5 min for payment window.");
+        $this->display_errors();
+        return false;
+      }
+    }
+
+    $wallet_local_port = $_POST['woocommerce_' . $this->id . '_wallet_local_port'];
+    if ($wallet_local_port !== $this->wallet_local_port) {
+      try {
+        $xelis_wallet = new Xelis_Wallet();
+        if ($xelis_wallet->is_port_in_use($wallet_local_port)) {
+          $this->add_error("Port " . $wallet_local_port . " already in use by another process.");
+          $this->display_errors();
+          return false;
+        }
+
+        $this->wallet_local_port = $wallet_local_port;
+        $xelis_wallet->close_wallet();
+        $xelis_wallet->start_wallet();
+      } catch (Exception $e) {
+        $this->add_error("Can't restart wallet: " . $e->getMessage());
         $this->display_errors();
         return false;
       }
