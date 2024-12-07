@@ -60,7 +60,13 @@ function xelis_payment_activation() {
     }
 
     $xelis_wallet->set_wallet_executable();
-    $xelis_wallet->start_wallet();
+
+    try {
+      $xelis_wallet->start_wallet();
+    } catch (Exception $e) {
+      // continue with plugin activation even if wallet can't start
+      // maybe the default port is already in use and the user needs to change it in config
+    }
   }
 }
 
