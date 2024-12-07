@@ -122,6 +122,16 @@ function render_page()
         $errors[] = "Stop wallet: " . $e->getMessage();
       }
     }
+
+    if (isset($_POST["kill"])) {
+      try {
+        $xelis_wallet->close_wallet(9); // SIGKILL
+        $success_msg = "Wallet is killed";
+        sleep(1);
+      } catch (Exception $e) {
+        $errors[] = "Kill wallet: " . $e->getMessage();
+      }
+    }
   }
 
   try {
@@ -301,6 +311,13 @@ function render_page()
       border: .1rem solid green;
       margin-bottom: .5rem;
     }
+
+    .wallet-form-buttons {
+      display: flex;
+      flex-direction: row;
+      gap: .5rem;
+      margin-top: .5rem;
+    }
   </style>
   <div class="xelis-wallet-body">
     <h1><?php esc_html_e('XELIS Wallet', 'xelis_payment'); ?></h1>
@@ -354,17 +371,24 @@ function render_page()
     <?php endif; ?>
     <?php if (!$is_running): ?>
       <br>
-      <form method="post" action="">
-        <span>Wallet is not running: </span>
-        <input type="submit" name="start" value="Start">
-      </form>
+      <div>Wallet is not running</div>
+      <div class="wallet-form-buttons">
+        <form method="post" action="">
+          <input type="submit" name="start" value="Start">
+        </form>
+      </div>
     <?php endif; ?>
     <?php if ($is_running): ?>
       <br>
-      <form method="post" action="">
-        <span>Wallet is running: </span>
-        <input type="submit" name="stop" value="Stop">
-      </form>
+      <div>Wallet is running</div>
+      <div class="wallet-form-buttons">
+        <form method="post" action="" onSubmit="return confirm('Are you sure you want to stop the wallet?');">
+          <input type="submit" name="stop" value="Stop">
+        </form>
+        <form method="post" action="" onSubmit="return confirm('Are you sure you want to kill the wallet?');">
+          <input type="submit" name="kill" value="Kill">
+        </form>
+      </div>
     <?php endif; ?>
     <br>
     <div>

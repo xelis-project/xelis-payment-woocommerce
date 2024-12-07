@@ -280,15 +280,15 @@ class Xelis_Wallet
     return false;
   }
 
-  public function close_wallet()
+  public function close_wallet(int $signal = 15)
   {
     $pid = $this->get_wallet_pid();
     if ($pid) {
       // TODO: windows
-      $success = posix_kill($pid, 15); // 15 is SIGTERM
-      if ($success) {
-        unlink($this->wallet_pid_path);
-      } else {
+      $success = posix_kill($pid, $signal); // 15 is SIGTERM
+      if (!$success) {
+        // don't unlink PID file in case posix_kill return success even if it doesn't kill the app
+        // we don't want to loose the PID so lets use kill -0 to check if running - check is_process_running func
         throw new Exception(posix_get_last_error());
       }
     } else {
