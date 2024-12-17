@@ -228,8 +228,7 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
 
       try {
         $xelis_wallet = new Xelis_Wallet();
-        $xelis_wallet->close_wallet();
-        $xelis_wallet->start_wallet();
+        $xelis_wallet->restart_wallet();
       } catch (Exception $e) {
         $this->add_error("Can't restart wallet: " . $e->getMessage());
         $this->display_errors();
@@ -312,8 +311,7 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
         }
 
         $this->wallet_local_port = $wallet_local_port;
-        $xelis_wallet->close_wallet();
-        $xelis_wallet->start_wallet();
+        $xelis_wallet->restart_wallet();
       } catch (Exception $e) {
         $this->add_error("Can't restart wallet: " . $e->getMessage());
         $this->display_errors();

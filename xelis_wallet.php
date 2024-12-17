@@ -280,6 +280,14 @@ class Xelis_Wallet
     return false;
   }
 
+  public function restart_wallet() {
+    if ($this->is_process_running()) {
+      $this->close_wallet();
+      sleep(2); // wait for process to free stuff or we might get port already in use
+      $this->start_wallet();
+    }
+  }
+
   public function close_wallet(int $signal = 15)
   {
     $pid = $this->get_wallet_pid();
