@@ -24,7 +24,7 @@ class Xelis_Data
     if (isset($data->rows) && is_array($data->rows) && count($data->rows) > 0) {
       if (isset($data->rows[0]->price)) {
         if (is_numeric($data->rows[0]->price)) {
-          return $data->rows[0]->price;
+          return round($data->rows[0]->price, 2);
         }
       }
     }
