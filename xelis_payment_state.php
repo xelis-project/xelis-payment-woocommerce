@@ -173,10 +173,10 @@ class Xelis_Payment_State
             // found the matching transaction :)
             // multiple things can happend from here
 
-            // 1. the tx is valid (we redirect the funds to the store owner addr)
+            // 1. the payment window is expired (we refund and mark as expired_refund)
             // 2. the amount is not exact (we refund and mark as wrong_amount_refund)
             // 3. the asset is not XELIS (we don't refund and mark as wrong_asset)
-            // 4. the payment window is expired (we refund and mark as expired_refund)
+            // 4. the tx is valid (we redirect the funds to the store owner addr)
             // if there are any errors in sending funds we log the error and reset to waiting
 
             // 1. we found a valid tx but the payment window expired so we refund instantly
