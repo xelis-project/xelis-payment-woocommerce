@@ -35,9 +35,14 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
     //error_log('Constructor called at: ' . print_r(debug_backtrace(), true));
     $this->init_settings();
 
-    $this->title = __('XELIS Payment', 'xelis_payment');
     $this->enabled = $this->get_option('enabled', 'no');
     $this->network = $this->get_option('network', 'mainnet');
+    $this->title = __('XELIS Payment', 'xelis_payment');
+
+    if ($this->network !== 'mainnet') {
+      $this->title = $this->title . " (" . $this->network . ")";
+    }
+
     $this->wallet_addr = $this->get_option('wallet_addr', '');
     $this->payment_timeout = $this->get_option('payment_timeout', '30');
     $this->node_endpoint = $this->get_option('node_endpoint', 'https://node.xelis.io');
@@ -94,6 +99,9 @@ class Xelis_Payment_Gateway extends WC_Payment_Gateway
     );
 
     ?>
+    <script type="text/javascript">
+      window.XELIS_NETWORK = "<?php echo $this->network ?>";
+    </script>
     <div id="xelis_payment_content"></div>
     <?php
   }
