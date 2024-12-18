@@ -70,13 +70,25 @@ class Xelis_Payment_State
     }
 
     $xelis_wallet = new Xelis_Wallet();
+    try {
+      $node_topoheight = $xelis_node->get_topoheight();
+    } catch (Exception $e) {
+      error_log('Error in init_payment_state: ' . $e->getMessage());
+      throw new Exception($e->getMessage());
+    }
 
     try {
-      $addr = $xelis_wallet->get_address($payment_hash);
+      $addr = $xelis_wallet->get_address(integrated_data: $payment_hash);
       $start_topoheight = $xelis_wallet->get_topoheight();
     } catch (Exception $e) {
       error_log('Error in init_payment_state: ' . $e->getMessage());
       throw new Exception($e->getMessage());
+    }
+
+    // in case the hot wallet topo isn't synced with the node for some reason (maybe its stuck)
+    // we avoid requesting new payment and the store owner most likely need to restart the wallet
+    if ($node_topoheight - 8 > $start_topoheight) {
+      throw new Exception("The XELIS store wallet is not properly synced. We will avoid requesting payment until resolved.");
     }
 
     $xelis_data = new Xelis_Data();
