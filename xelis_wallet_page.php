@@ -22,6 +22,8 @@ function render_page()
 {
   $errors = [];
   $xelis_wallet = new Xelis_Wallet();
+  $gateway = Xelis_Payment_Gateway::get_instance();
+  $xelis_node = new Xelis_Node($gateway->node_endpoint);
   $xelis_gateway = Xelis_Payment_Gateway::get_instance();
 
   $filter_address = null;
@@ -32,6 +34,8 @@ function render_page()
   $filter_type = 'all';
   $filter_txid = null;
   $filter_type = null;
+  $wallet_topoheight = 0;
+  $node_topoheight = 0;
 
   if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_POST["send_funds"])) {
@@ -181,6 +185,13 @@ function render_page()
     $errors[] = "Get status: " . $e->getMessage();
   }
 
+  try {
+    $wallet_topoheight = $xelis_wallet->get_topoheight();
+    $node_topoheight = $xelis_node->get_topoheight();
+  } catch (Exception $e) {
+    $errors[] = "Get topo: " . $e->getMessage();
+  }
+
   ?>
   <style>
     h2 {
@@ -228,6 +239,13 @@ function render_page()
       padding: 1rem;
       font-size: 1.2rem;
       word-break: break-all;
+    }
+
+    .xelis-wallet-sync {
+      background-color: white;
+      border: .1rem solid #cfcfcf;
+      padding: 1rem;
+      font-size: 1.2rem;
     }
 
     .xelis-wallet-balance {
@@ -394,6 +412,8 @@ function render_page()
     <div>
       <a href="/wp-admin/admin.php?page=wc-settings&tab=checkout&section=xelis_payment">Go to XELIS Payment settings</a>
     </div>
+    <h2>Synced</h2>
+    <div class="xelis-wallet-sync"><?php echo $wallet_topoheight ?> / <?php echo $node_topoheight ?></div>
     <h2>Address</h2>
     <div class="xelis-wallet-addr"><?php echo isset($addr) ? $addr : '' ?></div>
     <h2>Balance</h2>
