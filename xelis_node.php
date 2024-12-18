@@ -19,6 +19,11 @@ class Xelis_Node
     return $this->fetch("get_top_block");
   }
 
+  public function get_topoheight()
+  {
+    return $this->fetch("get_topoheight");
+  }
+
   public function has_node_deviated_too_much()
   {
     $top_block = $this->get_top_block();
